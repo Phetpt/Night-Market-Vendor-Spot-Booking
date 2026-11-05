@@ -3,10 +3,12 @@
 import { useState, useEffect, useId } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CodeXml, Menu, X } from "lucide-react";
+import { CodeXml, Menu, X,  } from "lucide-react";
+import AuthButtons from "../auth/AuthButtons";
 
 import NavigationItem from "./NavigationItems";
 import { navigationItems } from "@/config/navigation";
+
 
 function isActivePath(pathname: string, pageRef: string): boolean {
   return (
@@ -32,7 +34,7 @@ export default function NavigationBar() {
       <nav aria-label="Main navigation">
         <div className="flex items-center justify-between gap-4 px-4 py-4">
 
-          {/* Left: Logo + Desktop My Booking */}
+          {/* Left: Logo + Menu */}
           <div className="flex min-w-0 items-center gap-6">
             <Link
               href="/"
@@ -47,17 +49,7 @@ export default function NavigationBar() {
               </span>
             </Link>
 
-            <div className="hidden md:block">
-              <NavigationItem
-                title="My Booking"
-                pageRef="/my-booking"
-                isActive={isActivePath(pathname, "/my-booking")}
-              />
-            </div>
-          </div>
-
-          {/* Right: Desktop Navigation */}
-          <ul className="hidden items-center gap-6 pr-3 md:flex">
+            <ul className="hidden items-center gap-6 md:flex">
             {navigationItems.map((item) => (
               <li key={item.pageRef}>
                 <NavigationItem
@@ -68,6 +60,18 @@ export default function NavigationBar() {
               </li>
             ))}
           </ul>
+
+            <div className="hidden md:block">
+              <NavigationItem
+                title="My Booking"
+                pageRef="/my-booking"
+                isActive={isActivePath(pathname, "/my-booking")}
+              />
+            </div>
+          </div>
+
+          {/* Right: Desktop Navigation */}
+          <AuthButtons/>
 
           {/* Mobile Hamburger Button */}
           <button

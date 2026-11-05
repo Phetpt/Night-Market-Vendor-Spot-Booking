@@ -9,6 +9,7 @@ export default function Banner() {
         src="/img/Night_Market.png"
         alt="banner"
         fill
+        priority
         className="object-cover "
       />
 
