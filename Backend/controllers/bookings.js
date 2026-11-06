@@ -119,3 +119,28 @@ exports.deleteBooking = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.getBookingAvailability = async (req, res, next) => {
+  try {
+    const { date } = req.query;
+
+    // เช็ครูปแบบวันที่ YYYY-MM-DD แบบเดียวกับที่ parseBookingInput ใช้
+    if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ success: false, error: "A valid date (YYYY-MM-DD) query parameter is required" });
+    }
+
+    const bookingDate = new Date(`${date}T00:00:00.000Z`);
+    // เช็คว่าเป็นวันที่จริงในปฏิทิน (กัน เช่น 2026-02-30)
+    if (Number.isNaN(bookingDate.getTime()) || bookingDate.toISOString().slice(0, 10) !== date) {
+      return res.status(400).json({ success: false, error: "Invalid date" });
+    }
+
+    // ดึงแค่ field "spot" เท่านั้น ไม่ populate user -> response ไม่มีทางรู้ว่าใครจอง
+    const bookings = await Booking.find({ bookingDate }).select("spot");
+    const bookedSpotIds = bookings.map((b) => b.spot.toString());
+
+    res.status(200).json({ success: true, count: bookedSpotIds.length, data: bookedSpotIds });
+  } catch (error) {
+    next(error);
+  }
+};

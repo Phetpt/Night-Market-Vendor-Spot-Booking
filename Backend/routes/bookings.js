@@ -239,11 +239,13 @@
  * }
  */
 const express = require("express");
-const { getBookings, getBooking, createBooking, updateBooking, deleteBooking } = require("../controllers/bookings");
+const { getBookings, getBooking, createBooking, updateBooking, deleteBooking, getBookingAvailability } = require("../controllers/bookings");
 const { protect, authorize } = require("../middleware/auth");
 const { serialize } = require("../middleware/serialize");
 
 const router = express.Router();
+router.get("/availability", getBookingAvailability);
+
 router.use(protect);
 router.get("/", getBookings);
 router.post("/", authorize("member"), serialize(createBooking));
