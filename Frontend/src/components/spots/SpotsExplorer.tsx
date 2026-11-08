@@ -9,13 +9,15 @@ import { useState } from "react"
 
 type Props = {
   spots: Spot[],
-  bookedSpotIds: string[]
+  bookedSpotIds: string[],
+  selectedDate: string,
+  today: string
 }
 
 const MAX_PER_DAY = 3
 
 
-export default function SpotsExpolorer({spots, bookedSpotIds}: Props) {
+export default function SpotsExpolorer({spots, bookedSpotIds, selectedDate, today}: Props) {
 
 const [selectedIds, setSelectedIds] = useState<string[]>([]) //array เพราะผู้ใช้เลือกได้หลายช่อง
 
@@ -41,7 +43,7 @@ const selectedSpots = spots.filter((spot)=>selectedIds.includes(spot._id))
       <div>
         <h1 className="font-bold text-3xl text-[#1F2A44]">Pick a spot for your night</h1>
         <h2 className="text-[#4A5470]">Choose a date to see what&apos;s open. Anyone can browse, and you log in when you&apos;re ready to book.</h2>
-        <DateStrip/>
+        <DateStrip value={selectedDate} today={today}/>
       </div>
 
       <div className="grid grid-cols-[1fr_340px] gap-6 items-start">
