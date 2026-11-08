@@ -9,7 +9,7 @@ export async function listSpots() {
 
 //ดึงรายการเดียว
 export async function getSpotById(id: string) {
-  const {data} = await apiRequest<Spot[]>(`/spots/${id}`)
+  const {data} = await apiRequest<Spot>(`/spots/${id}`)
   return data
 }
 

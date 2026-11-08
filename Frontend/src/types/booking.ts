@@ -1,9 +1,11 @@
 import type { Spot } from "./spot"
 import type { User } from "./user"
 
+export type BookingSpot = Omit<Spot, "createdAt" | "updatedAt">
+
 export type Booking = {
   _id: string
-  spot: Spot            // Backend populate spot ให้ใน response
+  spot: BookingSpot           // Backend populate spot ให้ใน response
   user: User            // และ user ด้วย
   bookingDate: string   // ISO date จาก Mongo
   productType: string
