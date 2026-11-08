@@ -26,18 +26,18 @@ export default function SpotGrid({spots, statusOf, onToggle}: Props) {
   // zones = [ 'Fasion zone', 'Food zone', 'Handmade zone' ] เรียงตาม spotNumber -> [ 'Food zone', 'Fasion zone', 'Handmade zone' ]
   
     return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 ">
       {zones.map((zone) => (
         <section
           key={zone}
-          className="rounded-2xl border border-[#DDE3F2] bg-white p-4">
+          className="rounded-2xl border border-[#DDE3F2] bg-white p-4 ">
 
-          <h2 className="mb-4 flex items-center gap-3 text-xl font-bold text-[#1B2038]">
+          <h2 className="mb-4 flex items-center gap-3 text-xl font-bold text-[#1B2038] ">
             <span className="h-3 w-3 rounded-full "style={{ backgroundColor: zoneColor(zone) }}/>
             {zone}
           </h2>
 
-          <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <ul className="grid grid-cols-2 gap-3 md:grid-cols-4 ">
             {byZone[zone]?.map((spot) => {
               const status =  statusOf(spot)
 
@@ -52,9 +52,3 @@ export default function SpotGrid({spots, statusOf, onToggle}: Props) {
   )
 }
 
-
-//  const [{spots}, bookedSpotIds] = await Promise.all([
-//     listSpots(),
-//     getBookedSpotIds(selectedDate)
-//   ])
-  //{ spots: [ {...A01}, {...A02}, {...B01}, ... ], count: 12 }

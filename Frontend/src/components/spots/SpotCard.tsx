@@ -39,7 +39,7 @@ export function SpotCard({ spot, status, onToggle }: Props) {
         type="button"
         disabled={disabled}
         onClick={() => onToggle(spot._id)}
-        className={`w-full rounded-2xl border p-4 text-left disabled:cursor-not-allowed ${STYLES[status]}`}>
+        className={`w-full rounded-2xl border p-4 text-left disabled:cursor-not-allowed ${STYLES[status]} hover:border-[#8A3F1D]/50 hover:bg-[#FFF4EC]`}>
 
         <span className={`block text-lg font-bold ${status === "booked" ? "line-through" : ""}`}>
           {spot.spotNumber}
