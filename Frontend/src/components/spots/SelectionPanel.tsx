@@ -15,6 +15,11 @@ export default function SelectionPanel({ selectedSpots, onRemove, onConfirm, max
   const hasSelection = selectedSpots.length > 0
   const total = selectedSpots.reduce((sum, spot) => sum + spot.rentalFee, 0)
 
+  // check: Have the product types been entered for all the selected slots?
+  const allFilled = selectedSpots.every(
+    (spot) => (productTypes[spot._id] ?? "").trim() !== ""
+  )
+
   // ---------- Render ----------
   return (
     <div className="w-full rounded-3xl border border-indigo-100 bg-white px-6 py-5 flex flex-col items-start gap-2">
@@ -88,7 +93,8 @@ export default function SelectionPanel({ selectedSpots, onRemove, onConfirm, max
           <button
             type="button"
             onClick={onConfirm}
-            className="min-h-11 w-full rounded-xl bg-[#8A3F1D] px-4 font-bold text-white hover:bg-[#6F3217]"
+            disabled={!allFilled}
+            className="min-h-11 w-full rounded-xl bg-[#8A3F1D] px-4 font-bold text-white hover:bg-[#6F3217] disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             Confirm booking
           </button>
