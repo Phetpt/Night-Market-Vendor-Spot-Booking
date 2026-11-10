@@ -5,7 +5,7 @@ export type RegisterInput = {
   "email": string,
   "tel": string,
   "password": string,
-  "role": User["role"]
+  "role"?: User["role"]
 }
 
 export type LoginInput = {
