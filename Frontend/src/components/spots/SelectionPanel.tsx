@@ -4,10 +4,13 @@ type Props = {
   selectedSpots: Spot[]
   onRemove: (id: string) => void
   onConfirm: () => void
-  maxSpots?: number // เพดานช่องต่อวัน (ส่งมาจาก parent จะได้ไม่ซ้ำกับ MAX_PER_DAY)
+  maxSpots: number // เพดานช่องต่อวัน (ส่งมาจาก parent จะได้ไม่ซ้ำกับ MAX_PER_DAY)
+  productTypes: Record<string, string>
+  onProductTypeChange: (id: string, value: string) => void
 }
 
-export default function SelectionPanel({ selectedSpots, onRemove, onConfirm, maxSpots}: Props) {
+
+export default function SelectionPanel({ selectedSpots, onRemove, onConfirm, maxSpots, productTypes, onProductTypeChange}: Props) {
   // ---------- Derived data ----------
   const hasSelection = selectedSpots.length > 0
   const total = selectedSpots.reduce((sum, spot) => sum + spot.rentalFee, 0)
@@ -31,24 +34,45 @@ export default function SelectionPanel({ selectedSpots, onRemove, onConfirm, max
           {selectedSpots.map((spot) => (
             <li
               key={spot._id}
-              className="flex items-center justify-between rounded-xl border border-indigo-100 p-3"
+              className="flex flex-col gap-2 rounded-xl border border-indigo-100 p-3"
             >
-              <div>
-                <div className="font-bold">{spot.spotNumber}</div>
-                <div className="text-sm text-[#4A5470]">
-                  {spot.zone} · {spot.spotSize}
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-bold">{spot.spotNumber}</div>
+                  <div className="text-sm text-[#4A5470]">
+                    {spot.zone} · {spot.spotSize}
+                  </div>
                 </div>
+                <div className="flex justify-between items-center gap-2.5">
+                  <span className="font-bold">฿{spot.rentalFee}</span>
+                  <button
+                    type="button"
+                    onClick={() => onRemove(spot._id)}
+                    aria-label={`Remove ${spot.spotNumber}`}
+                    className="flex size-8 items-center justify-center rounded-lg border border-indigo-100 text-[#4A5470] hover:bg-slate-100"
+                  >
+                    X
+                  </button>
+                </div>
+                
               </div>
-              <span className="font-bold">฿{spot.rentalFee}</span>
-              <button
-                type="button"
-                onClick={() => onRemove(spot._id)}
-                aria-label={`Remove ${spot.spotNumber}`}
-                className="flex size-8 items-center justify-center rounded-lg border border-indigo-100 text-[#4A5470] hover:bg-slate-100"
-              >
-                X
-              </button>
+             
+              <div className="flex flex-col gap-1">
+                <label 
+                htmlFor={`product-${spot._id}`} 
+                className="text-sm font-semibold">
+                  Product Type
+                </label>
+                <input 
+                type="text" 
+                value={productTypes[spot._id] ?? ""}
+                onChange={(e)=>onProductTypeChange(spot._id, e.target.value)}
+                id={`product-${spot._id}`} 
+                placeholder="e.g. Grilled pork skewers"
+                className="h-10 w-full rounded-lg border border-[#CFD8EE] px-3 text-sm"/>
+              </div>
             </li>
+            
           ))}
         </ul>
       )}

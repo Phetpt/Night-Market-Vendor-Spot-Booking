@@ -22,6 +22,7 @@ export default function SpotsExplorer({ spots, bookedSpotIds, selectedDate, toda
   // ---------- State ----------
   const [selectedIds, setSelectedIds] = useState<string[]>([]) // array เพราะผู้ใช้เลือกได้หลายช่อง
   const [activeZone, setActiveZone] = useState<string>("all")
+  const [productTypes, setProductTypes] = useState<Record<string, string>>({})
 
   // ---------- Derived data ----------
   const sortedSpots = [...spots].sort((a, b) => a.spotNumber.localeCompare(b.spotNumber))//เรียนตาม A, B, C,...
@@ -55,6 +56,10 @@ export default function SpotsExplorer({ spots, bookedSpotIds, selectedDate, toda
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     )
+  }
+  // เก็บข้อความ productType ของช่องที่ระบุ
+  function updateProductType(id: string, value: string) {
+    setProductTypes((prev) => ({...prev, [id]: value}))
   }
 
   // TODO: ส่งการจองไป backend (ต้อง login ก่อน)
@@ -96,6 +101,8 @@ export default function SpotsExplorer({ spots, bookedSpotIds, selectedDate, toda
             onRemove={toggle}
             onConfirm={handleConfirm}
             maxSpots={MAX_PER_DAY}
+            productTypes={productTypes}
+            onProductTypeChange={updateProductType}
           />
           <BookingRules />
         </aside>
