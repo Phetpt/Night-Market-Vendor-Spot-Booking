@@ -1,6 +1,10 @@
 import SpotsExpolorer from "@/components/spots/SpotsExplorer"
 import { listSpots } from "@/lib/api/spots"
-import { getBookedSpotIds } from "@/lib/api/bookings"
+import { getBookedSpotIds, listBookings } from "@/lib/api/bookings"
+
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+
 
 type Props = {
   searchParams: Promise<{ date?: string }>
@@ -26,11 +30,33 @@ export default async function Spots({ searchParams }: Props) {
     getBookedSpotIds(selectedDate),
   ])
 
+  const session = await getServerSession(authOptions)
+
+  let myBookedSpotIds: string[] = []
+
+  if (session) {
+    try {
+      const { bookings } = await listBookings(session.accessToken)
+
+      myBookedSpotIds = bookings
+        .filter(
+          (b) =>
+            b.user._id === session.user.id &&
+            b.bookingDate.slice(0, 10) === selectedDate
+        )
+        .map((b) => b.spot._id)
+    } catch (error) {
+      console.error("could not load my bookings", error)
+    }
+  }
+
+
   return (
     <SpotsExpolorer
       key={selectedDate}
       spots={spots}
       bookedSpotIds={bookedSpotIds}
+      myBookedSpotIds={myBookedSpotIds}
       selectedDate={selectedDate}
       today={today}
     />

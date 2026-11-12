@@ -11,6 +11,9 @@ export type ActionResult =
 
 function toMessage(err: unknown) {
   const e = err as Partial<ApiError>
+  if (e?.status === 409 || /E11000|duplicate key/i.test(e?.message ?? ""))
+    return "Email already in use"
+  if (e?.status && e.status >= 500) return "Something went wrong. Please try again."
   return e?.message ?? "Something went wrong"
 }
 
