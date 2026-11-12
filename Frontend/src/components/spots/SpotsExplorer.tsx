@@ -16,9 +16,10 @@ type Props = {
   myBookedSpotIds: string[]
   selectedDate: string
   today: string
+  isLoggedIn: boolean
 }
 
-export default function SpotsExplorer({ spots, bookedSpotIds, selectedDate, today, myBookedSpotIds }: Props) {
+export default function SpotsExplorer({ spots, bookedSpotIds, selectedDate, today, myBookedSpotIds, isLoggedIn }: Props) {
   // ---------- State ----------
   const [selectedIds, setSelectedIds] = useState<string[]>([]) // array เพราะผู้ใช้เลือกได้หลายช่อง
   const [activeZone, setActiveZone] = useState<string>("all")
@@ -149,6 +150,8 @@ export default function SpotsExplorer({ spots, bookedSpotIds, selectedDate, toda
             alreadyBookedCount={myIds.length}
             isSubmitting={isSubmitting}
             results={resultLines}
+            isLoggedIn={isLoggedIn}
+            
           />
           <BookingRules />
         </aside>
