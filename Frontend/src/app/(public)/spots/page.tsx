@@ -8,6 +8,7 @@ import { authOptions } from "@/lib/auth"
 
 type Props = {
   searchParams: Promise<{ date?: string }>
+
 }
 
 // ตรวจว่าเป็นวันที่จริงในรูป YYYY-MM-DD (กันทั้งรูปแบบผิดและวันที่ที่ไม่มีจริง)
@@ -59,6 +60,7 @@ export default async function Spots({ searchParams }: Props) {
       myBookedSpotIds={myBookedSpotIds}
       selectedDate={selectedDate}
       today={today}
+      isLoggedIn={session !== null}
     />
   )
 }
