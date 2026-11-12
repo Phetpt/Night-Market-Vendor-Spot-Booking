@@ -1,3 +1,4 @@
+'use client'
 import { cn } from "@/lib/utils"
 
 import { Button } from "@/components/ui/button"
@@ -8,20 +9,96 @@ import {
   FieldGroup,
   FieldLabel,
   FieldSeparator,
+  FieldError
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
 import Link from "next/link"
 
+import {
+  validateRegister,
+  formatTel,
+  PASSWORD_MIN,
+  type RegisterFormValues,
+  type FieldErrors,
+} from "@/lib/validation/auth"
+import { useState } from "react"
+
+import { useRouter } from "next/navigation"
+import { registerAction } from "@/lib/actions/auth" // <- ปรับ path ให้ตรงกับไฟล์ action ของคุณ
+
+
 export function RegisterForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+
+  const router = useRouter()
+
+  const [values, setValues] = useState<RegisterFormValues>({
+    name: "",
+    email: "",
+    tel: "",
+    password: "",
+    confirmPassword: ""
+  })
+  const [errors, setErrors] = useState<FieldErrors<RegisterFormValues>>({})
+  const [submitting, setSubmitting] = useState(false)
+  const [formError, setFormError] = useState("")
+
+  // ใช้กับทุกช่อง ยกเว้น tel: อ่านชื่อช่องจาก attribute name ของ input
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const key = e.target.name as keyof RegisterFormValues
+    setValues((prev) => ({ ...prev, [key]: e.target.value }))
+    setErrors((prev) => ({ ...prev, [key]: undefined })) // พิมพ์ใหม่ → เคลียร์ error ช่องนั้น
+  }
+
+  // เฉพาะ tel: จัดรูปแบบก่อนเก็บเข้า state
+  function handleTelChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setValues((prev) => ({ ...prev, tel: formatTel(e.target.value) }))
+    setErrors((prev) => ({ ...prev, tel: undefined }))
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault() // กันหน้า reload
+
+    // ตรวจฝั่ง client ให้ error ขึ้นเร็ว (server ตรวจซ้ำอีกครั้งใน registerAction)
+    const result = validateRegister(values)
+    if (!result.ok) {
+      setErrors(result.errors)
+      return
+    }
+
+    setErrors({})
+    setFormError("")
+    setSubmitting(true)
+
+    try {
+      // ส่ง "values" (มี confirmPassword) ไม่ใช่ result.data
+      // เพราะ registerAction จะ validateRegister ซ้ำเอง
+      const res = await registerAction(values)
+
+      if (res.ok) {
+        router.push("/login?registered=1")
+        return
+      }
+
+      // ไม่ผ่านการตรวจฝั่ง server หรือ Backend ปฏิเสธ (เช่น email ซ้ำ)
+      if (res.errors) setErrors(res.errors)
+      if (res.message) setFormError(res.message)
+    } catch {
+      // กรณี network ล่ม / server ตอบผิดปกติ
+      setFormError("Something went wrong")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form className="p-6 md:p-8">
+          <form className="p-6 md:p-8" onSubmit={handleSubmit} noValidate>
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Create your account</h1>
@@ -30,56 +107,96 @@ export function RegisterForm({
                 </p>
               </div>
 
-              <Field>
+              <Field data-invalid={!!errors.name}>
                 <FieldLabel htmlFor="name">Full Name</FieldLabel>
                 <Input
                   id="name"
+                  name="name"
                   type="text"
                   placeholder="John Smith"
+                  value={values.name}
+                  onChange={handleChange}
+                  aria-invalid={!!errors.name}
                   required
                 />
+                {errors.name && <FieldError>{errors.name}</FieldError>}
               </Field>
 
-              <Field>
+              <Field data-invalid={!!errors.email}>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="m@example.com"
+                  value={values.email}
+                  onChange={handleChange}
+                  aria-invalid={!!errors.email}
                   required
                 />
+                {errors.email && <FieldError>{errors.email}</FieldError>}
               </Field>
 
-              <Field>
+              <Field data-invalid={!!errors.tel}>
                 <FieldLabel htmlFor="tel">Phone Number</FieldLabel>
                 <Input
                   id="tel"
+                  name="tel"
                   type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel"
                   placeholder="e.g. 081-234-5678"
+                  value={values.tel}
+                  onChange={handleTelChange} // <- ใช้ตัวนี้ ไม่ใช่ handleChange
+                  aria-invalid={!!errors.tel}
                   required
                 />
+                {errors.tel && <FieldError>{errors.tel}</FieldError>}
               </Field>
-              
+
               <Field>
                 <Field className="grid grid-cols-2 gap-4">
-                  <Field>
+                  <Field data-invalid={!!errors.password}>
                     <FieldLabel htmlFor="password">Password</FieldLabel>
-                    <Input id="password" type="password" required />
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      value={values.password}
+                      onChange={handleChange}
+                      aria-invalid={!!errors.password}
+                      required
+                    />
+                    {errors.password && <FieldError>{errors.password}</FieldError>}
                   </Field>
-                  <Field>
-                    <FieldLabel htmlFor="confirm-password">
-                      Confirm Password
-                    </FieldLabel>
-                    <Input id="confirm-password" type="password" required />
+                  <Field data-invalid={!!errors.confirmPassword}>
+                    <FieldLabel htmlFor="confirm-password">Confirm Password</FieldLabel>
+                    <Input
+                      id="confirm-password"
+                      name="confirmPassword" // <- name ไม่ใช่ id (id เป็น kebab-case ได้)
+                      type="password"
+                      value={values.confirmPassword}
+                      onChange={handleChange}
+                      aria-invalid={!!errors.confirmPassword}
+                      required
+                    />
+                    {errors.confirmPassword && (
+                      <FieldError>{errors.confirmPassword}</FieldError>
+                    )}
                   </Field>
                 </Field>
                 <FieldDescription>
-                  Must be at least 8 characters long.
+                  Must be at least {PASSWORD_MIN} characters long.
                 </FieldDescription>
               </Field>
+
               <Field>
-                <Button type="submit">Create Account</Button>
+                {formError && <FieldError>{formError}</FieldError>}
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? "Creating..." : "Create Account"}
+                </Button>
               </Field>
+
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 Or continue with
               </FieldSeparator>
