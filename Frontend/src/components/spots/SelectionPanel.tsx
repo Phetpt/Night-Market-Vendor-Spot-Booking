@@ -1,4 +1,5 @@
 import type { Spot } from "@/types/spot"
+import type { BookingResult } from "@/app/actions/bookings"
 
 type Props = {
   selectedSpots: Spot[]
@@ -7,13 +8,19 @@ type Props = {
   maxSpots: number // เพดานช่องต่อวัน (ส่งมาจาก parent จะได้ไม่ซ้ำกับ MAX_PER_DAY)
   productTypes: Record<string, string>
   onProductTypeChange: (id: string, value: string) => void
+  alreadyBookedCount: number
+  isSubmitting: boolean
+  results: (BookingResult & { label: string })[]
 }
 
 
-export default function SelectionPanel({ selectedSpots, onRemove, onConfirm, maxSpots, productTypes, onProductTypeChange}: Props) {
+export default function SelectionPanel({ selectedSpots, onRemove, onConfirm, maxSpots, productTypes, onProductTypeChange, alreadyBookedCount, isSubmitting, results}: Props) {
   // ---------- Derived data ----------
   const hasSelection = selectedSpots.length > 0
   const total = selectedSpots.reduce((sum, spot) => sum + spot.rentalFee, 0)
+
+  const usedCount = alreadyBookedCount + selectedSpots.length
+  const limitReached = usedCount >= maxSpots
 
   // check: Have the product types been entered for all the selected slots?
   const allFilled = selectedSpots.every(
@@ -25,11 +32,26 @@ export default function SelectionPanel({ selectedSpots, onRemove, onConfirm, max
     <div className="w-full rounded-3xl border border-indigo-100 bg-white px-6 py-5 flex flex-col items-start gap-2">
       {/* Header + ตัวนับจำนวนที่เลือก */}
       <h2 className="font-bold text-xl">Your selection</h2>
-      {hasSelection && (
-        <p className="text-sm text-[#4A5470]">
-          {selectedSpots.length} of {maxSpots} spots
-        </p>
+      {results.length > 0 && (
+        <ul role="status" className="w-full space-y-1 text-sm">
+          {results.map((r) => (
+            <li key={r.spotId} className={r.ok ? "text-emerald-700" : "text-red-700"}>
+              {r.label}: {r.ok ? "booked" : r.error}
+            </li>
+          ))}
+        </ul>
       )}
+      {usedCount > 0 && (
+    <p className="text-sm text-[#4A5470]">
+      {selectedSpots.length} selected + {alreadyBookedCount} already booked = {usedCount} of {maxSpots} spots
+    </p>
+  )}
+
+  {limitReached && (
+    <p className="w-full rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+      Daily limit reached ({usedCount} of {maxSpots}). Remove a spot to pick a different one.
+    </p>
+  )}
 
       {/* รายการที่เลือก (หรือ empty state) */}
       {!hasSelection ? (
@@ -93,10 +115,10 @@ export default function SelectionPanel({ selectedSpots, onRemove, onConfirm, max
           <button
             type="button"
             onClick={onConfirm}
-            disabled={!allFilled}
+            disabled={!allFilled || isSubmitting}
             className="min-h-11 w-full rounded-xl bg-[#8A3F1D] px-4 font-bold text-white hover:bg-[#6F3217] disabled:cursor-not-allowed disabled:bg-slate-300"
           >
-            Confirm booking
+            {isSubmitting ? "Booking..." : "Confirm booking"}
           </button>
         </>
       )}

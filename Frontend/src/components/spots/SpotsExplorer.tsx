@@ -7,22 +7,27 @@ import DateStrip from "./DateStrip"
 import ZoneTabs from "./ZoneTabs"
 import SpotGrid from "./SpotGrid"
 import SelectionPanel from "./SelectionPanel"
+import { bookSpots, type BookingResult } from "@/app/actions/bookings"
+import { MAX_PER_DAY } from "@/config/booking"
 
 type Props = {
   spots: Spot[]
-  bookedSpotIds: string[]
+  bookedSpotIds: string[],
+  myBookedSpotIds: string[]
   selectedDate: string
   today: string
 }
 
-// จำนวนช่องสูงสุดที่จองได้ต่อวัน
-const MAX_PER_DAY = 3
-
-export default function SpotsExplorer({ spots, bookedSpotIds, selectedDate, today }: Props) {
+export default function SpotsExplorer({ spots, bookedSpotIds, selectedDate, today, myBookedSpotIds }: Props) {
   // ---------- State ----------
   const [selectedIds, setSelectedIds] = useState<string[]>([]) // array เพราะผู้ใช้เลือกได้หลายช่อง
   const [activeZone, setActiveZone] = useState<string>("all")
   const [productTypes, setProductTypes] = useState<Record<string, string>>({})
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [results, setResults] = useState<BookingResult[]>([])
+
+  const [justBookedIds, setJustBookedIds] = useState<string[]>([])
 
   // ---------- Derived data ----------
   const sortedSpots = [...spots].sort((a, b) => a.spotNumber.localeCompare(b.spotNumber))//เรียนตาม A, B, C,...
@@ -42,12 +47,19 @@ export default function SpotsExplorer({ spots, bookedSpotIds, selectedDate, toda
   const bookedCount = spots.filter((spot) => bookedSpotIds.includes(spot._id)).length
   const openCount = spots.length - bookedCount
 
+  const resultLines = results.map((r) => ({
+  ...r,
+  label: spots.find((s) => s._id === r.spotId)?.spotNumber ?? "Unknown spot",
+}))
+  const myIds = [...new Set([...myBookedSpotIds, ...justBookedIds])]
+
   // ---------- Handlers ----------
-  // คำนวณสถานะของแต่ละช่อง ลำดับความสำคัญ: booked > selected > limit > available
+  // คำนวณสถานะของแต่ละช่อง ลำดับความสำคัญ: ypurs > booked > selected > limit > available
   function statusOf(spot: Spot): SpotStatus {
+    if (myIds.includes(spot._id)) return "yours"
     if (bookedSpotIds.includes(spot._id)) return "booked"
-    if (selectedIds.includes(spot._id)) return "selected"
-    if (selectedIds.length >= MAX_PER_DAY) return "limit"
+    if (selectedIds.includes(spot._id)) return "selected"                           
+    if (myIds.length + selectedIds.length >= MAX_PER_DAY) return "limit"         
     return "available"
   }
 
@@ -62,10 +74,41 @@ export default function SpotsExplorer({ spots, bookedSpotIds, selectedDate, toda
     setProductTypes((prev) => ({...prev, [id]: value}))
   }
 
-  // TODO: ส่งการจองไป backend (ต้อง login ก่อน)
-  function handleConfirm() {
-    console.log("confirm", selectedIds, selectedDate)
+  async function handleConfirm() {
+  if (isSubmitting) return
+  setIsSubmitting(true)
+  setResults([])
+
+  const items = selectedSpots.map((spot) => ({
+    spotId: spot._id,
+    productType: productTypes[spot._id] ?? "",
+  }))
+
+  try {
+  const res = await bookSpots(selectedDate, items)
+  setResults(res)
+
+  const okIds = res.filter((r) => r.ok).map((r) => r.spotId)
+  setSelectedIds((prev) => prev.filter((id) => !okIds.includes(id)))
+  setJustBookedIds((prev) => [...prev, ...okIds])
+
+  setProductTypes((prev) => {
+    const next = { ...prev }
+    for (const id of okIds) delete next[id]
+    return next
+  })
+  } catch {
+    setResults(
+      items.map((item) => ({
+        spotId: item.spotId,
+        ok: false,
+        error: "Network error, please try again",
+      }))
+    )
+  } finally {
+    setIsSubmitting(false)
   }
+}
 
   // ---------- Render ----------
   return (
@@ -103,6 +146,9 @@ export default function SpotsExplorer({ spots, bookedSpotIds, selectedDate, toda
             maxSpots={MAX_PER_DAY}
             productTypes={productTypes}
             onProductTypeChange={updateProductType}
+            alreadyBookedCount={myIds.length}
+            isSubmitting={isSubmitting}
+            results={resultLines}
           />
           <BookingRules />
         </aside>
