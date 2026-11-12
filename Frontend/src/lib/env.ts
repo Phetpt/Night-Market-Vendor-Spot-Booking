@@ -1,3 +1,4 @@
+import "server-only"
 
 // ดึงค่า env ถ้าไม่มีให้ error บอกชื่อตัวแปรที่ขาด
 function required(name: string) {
