@@ -1,28 +1,95 @@
 'use client'
 
-import { cn } from "cn"
+import { useState } from "react"
+import Image from "next/image"
+import Link from "next/link"
 
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
   FieldSeparator,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import Image from "next/image"
+import { signIn } from "next-auth/react"
+import { useRouter, useSearchParams } from "next/navigation"
+
+import { getSafeCallbackUrl } from "@/lib/safe-redirect"
+
+import {
+  validateLogin,
+  type LoginFormValues,
+  type FieldErrors,
+} from "@/lib/validation/auth"
 
 export function LoginForm({
   className,
+  registered,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div"> & { registered?: boolean }) {
+
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  // proxy ใส่ ?callbackUrl= มา; ตรวจว่าเป็น path ภายในเว็บเท่านั้น (กัน open redirect)
+  const callbackUrl = getSafeCallbackUrl(searchParams.get("callbackUrl"))
+
+  const [values, setValues] = useState<LoginFormValues>({ email: "", password: "" })
+  const [errors, setErrors] = useState<FieldErrors<LoginFormValues>>({})
+  const [submitting, setSubmitting] = useState(false)
+  const [formError, setFormError] = useState("") // error ระดับทั้งฟอร์ม เช่น รหัสผ่านผิด / server ล่ม
+
+  // ใช้กับทุกช่อง: อ่านชื่อช่องจาก attribute name ของ input
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const key = e.target.name as keyof LoginFormValues
+    setValues((prev) => ({ ...prev, [key]: e.target.value }))
+    setErrors((prev) => ({ ...prev, [key]: undefined })) // พิมพ์ใหม่ → เคลียร์ error ช่องนั้น
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault() // กันหน้า reload
+
+    // ตรวจฝั่ง client ให้ error ขึ้นเร็ว (server ตรวจซ้ำอีกครั้งใน loginAction)
+    const result = validateLogin(values)
+    if (!result.ok) {
+      setErrors(result.errors)
+      return
+    }
+
+    setErrors({})
+    setFormError("")
+    setSubmitting(true)
+
+    try {
+      const res = await signIn("credentials", {
+        ...result.data,       // email, password
+        redirect: false,      // ไม่ให้ NextAuth redirect เอง จะได้โชว์ error ในฟอร์มเรา
+      })
+
+      if (res?.error) {
+        setFormError(res.error) // ข้อความจาก throw new Error ใน authorize
+        return
+      }
+
+      router.push(callbackUrl)
+      router.refresh()        // ให้ server component อ่าน session ใหม่
+    } catch {
+      setFormError("Something went wrong")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form className="p-6 md:p-8">
+          {/* noValidate: ปิด popup ของเบราว์เซอร์ ให้ใช้ error ของเราแทน */}
+          <form className="p-6 md:p-8" onSubmit={handleSubmit} noValidate>
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">Welcome</h1>
@@ -30,16 +97,31 @@ export function LoginForm({
                   Login to your Night Market Vendor Spot account
                 </p>
               </div>
-              <Field>
+              {registered && (
+                <div
+                  role="status"
+                  className="rounded-md border border-green-600/30 bg-green-50 px-3 py-2 text-center text-sm text-green-800">
+                  Account created. Please log in.
+                </div>
+              )}
+
+
+              <Field data-invalid={!!errors.email}>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="m@example.com"
+                  value={values.email}
+                  onChange={handleChange}
+                  aria-invalid={!!errors.email}
                   required
                 />
+                {errors.email && <FieldError>{errors.email}</FieldError>}
               </Field>
-              <Field>
+
+              <Field data-invalid={!!errors.password}>
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
                   <a
@@ -49,14 +131,29 @@ export function LoginForm({
                     Forgot your password?
                   </a>
                 </div>
-                <Input id="password" type="password" required />
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={values.password}
+                  onChange={handleChange}
+                  aria-invalid={!!errors.password}
+                  required
+                />
+                {errors.password && <FieldError>{errors.password}</FieldError>}
               </Field>
+
               <Field>
-                <Button type="submit">Login</Button>
+                {formError && <FieldError>{formError}</FieldError>}
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? "Logging in..." : "Login"}
+                </Button>
               </Field>
+
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 Or continue with
               </FieldSeparator>
+
               <Field className="grid grid-cols-3 gap-4">
                 <Button variant="outline" type="button">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -86,11 +183,13 @@ export function LoginForm({
                   <span className="sr-only">Login with Meta</span>
                 </Button>
               </Field>
+
               <FieldDescription className="text-center">
-                Don&apos;t have an account? <a href="/register">Sign up</a>
+                Don&apos;t have an account? <Link href="/register">Sign up</Link>
               </FieldDescription>
             </FieldGroup>
           </form>
+
           <div className="relative hidden bg-muted md:block">
             <Image
               src="/img/moonlit-night-market-lights.png"
@@ -103,6 +202,7 @@ export function LoginForm({
           </div>
         </CardContent>
       </Card>
+
       <FieldDescription className="px-6 text-center">
         By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
         and <a href="#">Privacy Policy</a>.

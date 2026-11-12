@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useId } from "react";
+import { useState, useId } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CodeXml, Menu, X,  } from "lucide-react";
@@ -20,14 +20,13 @@ function isActivePath(pathname: string, pageRef: string): boolean {
 export default function NavigationBar() {
   const pathname = usePathname();
 
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // เก็บ "หน้าที่เปิดเมนูไว้" แทน true/false
+  // เปลี่ยนหน้า → pathname ไม่ตรงกับที่เก็บ → เมนูปิดเอง ไม่ต้องใช้ useEffect
+  const [menuOpenPath, setMenuOpenPath] = useState<string | null>(null);
+  const isMenuOpen = menuOpenPath === pathname;
+  const setIsMenuOpen = (open: boolean) => setMenuOpenPath(open ? pathname : null);
 
   const mobileMenuId = useId();
-
-  // ปิด Mobile Menu เมื่อเปลี่ยนหน้า
-  useEffect(() => {
-    setIsMenuOpen(false);
-  }, [pathname]);
 
   return (
     <header className="w-full border-b border-zinc-200 bg-white">
@@ -79,7 +78,7 @@ export default function NavigationBar() {
             aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={isMenuOpen}
             aria-controls={mobileMenuId}
-            onClick={() => setIsMenuOpen((prev) => !prev)}
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="shrink-0 rounded-md p-2 text-zinc-950
               hover:bg-zinc-100 focus-visible:outline-2
               focus-visible:outline-offset-2
