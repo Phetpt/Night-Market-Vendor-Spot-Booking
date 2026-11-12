@@ -16,6 +16,7 @@ type Props = {
   isSubmitting: boolean
   results: (BookingResult & { label: string })[]
   isLoggedIn: boolean
+  selectedDate: string
 }
 
 export default function SelectionPanel({
@@ -29,6 +30,7 @@ export default function SelectionPanel({
   isSubmitting,
   results,
   isLoggedIn,
+  selectedDate,
 }: Props) {
   // ---------- State ----------
   // เก็บ id ของช่องที่ผู้ใช้ "แตะแล้วออก" (blur) จะได้ไม่แดงตั้งแต่ยังไม่ได้พิมพ์
@@ -55,12 +57,23 @@ export default function SelectionPanel({
     setTouchedIds((prev) => (prev.includes(id) ? prev : [...prev, id]))
   }
 
+  const dateLabel = new Date(`${selectedDate}T00:00:00Z`).toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  })
+
   // ---------- Render ----------
   return (
     <div className="flex w-full flex-col items-start gap-2 rounded-3xl border border-indigo-100 bg-white px-6 py-5">
       {/* Header */}
-      <h2 className="text-xl font-bold">Your selection</h2>
-
+      <div className="flex w-full items-center justify-between">
+        <h2 className="text-xl font-bold">Your selection</h2>
+        <p className="text-sm text-[#4A5470]">{dateLabel}</p>
+      </div>
+      
       {/* แถบโควตา 3 ช่อง */}
       <div className="flex w-full gap-1.5" aria-hidden="true">
         {Array.from({ length: maxSpots }, (_, i) => (

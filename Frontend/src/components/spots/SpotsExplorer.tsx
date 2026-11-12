@@ -151,7 +151,7 @@ export default function SpotsExplorer({ spots, bookedSpotIds, selectedDate, toda
             isSubmitting={isSubmitting}
             results={resultLines}
             isLoggedIn={isLoggedIn}
-            
+            selectedDate={selectedDate}
           />
           <BookingRules />
         </aside>
