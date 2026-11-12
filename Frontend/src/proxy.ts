@@ -1,0 +1,14 @@
+import { NextResponse, type NextRequest } from "next/server"
+import { getToken } from "next-auth/jwt"
+
+export async function proxy(req: NextRequest) {
+  const token = await getToken({ req }) // อ่าน NEXTAUTH_SECRET จาก env เอง
+  if (!token) {
+    const url = new URL("/login", req.url)
+    url.searchParams.set("callbackUrl", req.nextUrl.pathname)
+    return NextResponse.redirect(url)
+  }
+  return NextResponse.next()
+}
+
+export const config = { matcher: ["/my-booking/:path*"] }
