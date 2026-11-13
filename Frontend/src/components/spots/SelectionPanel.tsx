@@ -195,7 +195,7 @@ export default function SelectionPanel({
                 You&apos;re browsing as a guest. Log in to confirm your booking.
               </p>
               <Link
-                href="/login"
+                href={`/login?callbackUrl=${encodeURIComponent(`/spots?date=${selectedDate}`)}`}
                 className="flex min-h-11 w-full items-center justify-center rounded-xl bg-[#8A3F1D] px-4 font-bold text-white hover:bg-[#6F3217]"
               >
                 Log in to book

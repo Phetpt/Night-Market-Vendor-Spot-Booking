@@ -11,7 +11,7 @@ export default function AuthButtons() {
   if (session) {
     return (
       <div className="flex items-center gap-4">
-        <span className="text-sm font-medium">{session.user.name}</span>
+        <span className="text-sm font-medium">{session.user.name} · {session.user.role}</span>
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
           className="border rounded-xl px-3 py-2 font-semibold border-slate-300 hover:bg-slate-50 w-24 text-center">

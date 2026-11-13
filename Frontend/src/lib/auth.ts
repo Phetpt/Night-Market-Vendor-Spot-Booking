@@ -28,8 +28,19 @@ export const authOptions: NextAuthOptions = {
             token: auth.token,
           }
         } catch (err) {
-          // throw Error จะทำให้ฝั่งฟอร์มได้ข้อความนี้ใน res.error
-          throw new Error((err as Partial<ApiError>)?.message ?? "Something went wrong")
+          const status = (err as Partial<ApiError>)?.status
+
+          if (status === 400 || status === 401) {
+            throw new Error("Incorrect email or password")
+          }
+          if (status === 429) {
+            throw new Error("Too many attempts, please try again in a few minutes")
+          }
+          if (status === undefined) {
+            // ไม่มี status = ไม่ได้คุยกับ backend สำเร็จ (เน็ตหลุด / backend ล่ม)
+            throw new Error("Can't reach the server, please try again")
+          }
+          throw new Error("Something went wrong, please try again")
         }
       },
     }),
