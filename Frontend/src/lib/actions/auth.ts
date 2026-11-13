@@ -11,10 +11,22 @@ export type ActionResult =
 
 function toMessage(err: unknown) {
   const e = err as Partial<ApiError>
-  if (e?.status === 409 || /E11000|duplicate key/i.test(e?.message ?? ""))
+
+  if (e?.status === 409 || /E11000|duplicate key/i.test(e?.message ?? "")) {
     return "Email already in use"
-  if (e?.status && e.status >= 500) return "Something went wrong. Please try again."
-  return e?.message ?? "Something went wrong"
+  }
+  if (e?.status === 429) {
+    return "Too many attempts, please try again in a few minutes"
+  }
+  if (e?.status === 400) {
+    // ข้อมูลไม่ผ่านกฎของ backend ข้อความจาก backend ใช้ได้
+    return e.message ?? "Please check your details and try again"
+  }
+  if (e?.status === undefined) {
+    // ไม่มี status = ไม่ได้คุยกับ backend สำเร็จ
+    return "Can't reach the server, please try again"
+  }
+  return "Something went wrong. Please try again."
 }
 
 export async function registerAction(values: unknown): Promise<ActionResult> {
