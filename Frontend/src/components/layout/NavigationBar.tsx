@@ -3,12 +3,12 @@
 import { useState, useId } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CodeXml, Menu, X,  } from "lucide-react";
+import { CodeXml, Menu, X } from "lucide-react";
+import { useSession } from "next-auth/react";
 import AuthButtons from "../auth/AuthButtons";
 
 import NavigationItem from "./NavigationItems";
-import { navigationItems } from "@/config/navigation";
-
+import { navigationItems, adminNavigationItems } from "@/config/navigation";
 
 function isActivePath(pathname: string, pageRef: string): boolean {
   return (
@@ -19,6 +19,10 @@ function isActivePath(pathname: string, pageRef: string): boolean {
 
 export default function NavigationBar() {
   const pathname = usePathname();
+
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "admin";
+  const items = isAdmin ? [...navigationItems, ...adminNavigationItems] : navigationItems;
 
   // เก็บ "หน้าที่เปิดเมนูไว้" แทน true/false
   // เปลี่ยนหน้า → pathname ไม่ตรงกับที่เก็บ → เมนูปิดเอง ไม่ต้องใช้ useEffect
@@ -31,7 +35,7 @@ export default function NavigationBar() {
   return (
     <header className="w-full border-b border-zinc-200 bg-white">
       <nav aria-label="Main navigation">
-        <div className="flex items-center justify-between gap-4 px-4 py-4">
+        <div className="flex items-center justify-between gap-4 px-6 py-4">
 
           {/* Left: Logo + Menu */}
           <div className="flex min-w-0 items-center gap-6">
@@ -49,16 +53,16 @@ export default function NavigationBar() {
             </Link>
 
             <ul className="hidden items-center gap-6 md:flex">
-            {navigationItems.map((item) => (
-              <li key={item.pageRef}>
-                <NavigationItem
-                  title={item.title}
-                  pageRef={item.pageRef}
-                  isActive={isActivePath(pathname, item.pageRef)}
-                />
-              </li>
-            ))}
-          </ul>
+              {items.map((item) => (
+                <li key={item.pageRef}>
+                  <NavigationItem
+                    title={item.title}
+                    pageRef={item.pageRef}
+                    isActive={isActivePath(pathname, item.pageRef)}
+                  />
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* Right: Desktop Navigation */}
@@ -88,18 +92,10 @@ export default function NavigationBar() {
         <div
           id={mobileMenuId}
           hidden={!isMenuOpen}
-          className="border-t border-zinc-200 px-4 py-3 md:hidden"
+          className="border-t border-zinc-200 px-6 py-3 md:hidden"
         >
           <ul className="flex flex-col gap-1">
-            <li>
-              <NavigationItem
-                title="My Booking"
-                pageRef="/my-booking"
-                isActive={isActivePath(pathname, "/my-booking")}
-                onClick={() => setIsMenuOpen(false)}/>
-            </li>
-
-            {navigationItems.map((item) => (
+            {items.map((item) => (
               <li key={item.pageRef}>
                 <NavigationItem
                   title={item.title}
