@@ -4,8 +4,10 @@ import { redirect } from "next/navigation"
 
 import { authOptions } from "@/lib/auth"
 import { listBookings } from "@/lib/api/bookings"
+import { listSpots } from "@/lib/api/spots"
 import { statusOf } from "@/lib/api/errors"
 import type { Booking } from "@/types/booking"
+import type { Spot } from "@/types/spot"
 import AdminBookingsExplorer from "@/components/admin/bookings/AdminBookingsExplorer"
 
 export const metadata: Metadata = {
@@ -30,6 +32,12 @@ export default async function AdminBookingsPage() {
     status = statusOf(err)
   }
 
+  // ถ้าโหลด spot ไม่ได้ ก็แค่ไม่มี dropdown ย้าย spot (หน้ายังใช้ได้)
+  let spots: Spot[] = []
+  try {
+    spots = (await listSpots()).spots
+  } catch {}
+
   if (status === 401) redirect("/session-expired?callbackUrl=/admin/bookings")
 
   if (bookings === null) {
@@ -42,5 +50,5 @@ export default async function AdminBookingsPage() {
     )
   }
 
-  return <AdminBookingsExplorer bookings={bookings} today={today} />
+  return <AdminBookingsExplorer bookings={bookings} spots={spots} today={today} />
 }
