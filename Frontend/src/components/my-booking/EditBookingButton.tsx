@@ -24,6 +24,8 @@ type Props = {
   today: string
   nightCounts: Record<string, number>
   dailyLimit: number
+  compact?: boolean
+  returnTo?: string // หน้าที่ต้องกลับมาถ้า session หมดอายุ
 }
 
 const label = "text-[11px] font-bold uppercase tracking-wide text-[#4A5470]"
@@ -67,7 +69,14 @@ function Section({
   )
 }
 
-export default function EditBookingButton({ booking, today, nightCounts, dailyLimit }: Props) {
+export default function EditBookingButton({
+  booking,
+  today,
+  nightCounts,
+  dailyLimit,
+  compact,
+  returnTo,
+}: Props) {
   const { spot, user } = booking
   const router = useRouter()
   const originalDate = booking.bookingDate.slice(0, 10)
@@ -129,7 +138,7 @@ export default function EditBookingButton({ booking, today, nightCounts, dailyLi
       ok = false
     } else if (date !== originalDate && (nightCounts[date] ?? 0) >= dailyLimit) {
       setDateError(`Limit reached on ${formatShortDate(date)}`)
-      setBanner(`You already have ${dailyLimit} spots on that night. Pick another date.`)
+      setBanner(`${user.name} already has ${dailyLimit} spots on that night. Pick another date.`)
       ok = false
     } else {
       setDateError(null)
@@ -146,6 +155,7 @@ export default function EditBookingButton({ booking, today, nightCounts, dailyLi
         spotId: spot._id,
         bookingDate: date,
         productType: product.trim(),
+        returnTo,
       })
       if (result.ok) {
         dialogRef.current?.close()
@@ -162,9 +172,13 @@ export default function EditBookingButton({ booking, today, nightCounts, dailyLi
       <button
         type="button"
         onClick={openDialog}
-        className="rounded-xl border border-[#8A3F1D] px-4 py-2 text-sm font-semibold text-[#8A3F1D] hover:bg-[#8A3F1D] hover:text-white focus-visible:ring-2 focus-visible:ring-[#8A3F1D] focus-visible:ring-offset-2"
+        className={
+          compact
+            ? "rounded-xl border border-[#8A3F1D] px-3 py-1.5 text-sm font-semibold text-[#8A3F1D] hover:bg-[#8A3F1D] hover:text-white focus-visible:ring-2 focus-visible:ring-[#8A3F1D] focus-visible:ring-offset-2"
+            : "rounded-xl border border-[#8A3F1D] px-4 py-2 text-sm font-semibold text-[#8A3F1D] hover:bg-[#8A3F1D] hover:text-white focus-visible:ring-2 focus-visible:ring-[#8A3F1D] focus-visible:ring-offset-2"
+        }
       >
-        Edit Booking
+        {compact ? "Edit" : "Edit Booking"}
       </button>
 
       <dialog
@@ -205,7 +219,7 @@ export default function EditBookingButton({ booking, today, nightCounts, dailyLi
               <p className="text-[#4A5470]">
                 {editing
                   ? "Update the night or product type. The spot stays the same."
-                  : "Your reservation record for this market night."}
+                  : "Reservation record for this market night."}
               </p>
             </div>
             <button

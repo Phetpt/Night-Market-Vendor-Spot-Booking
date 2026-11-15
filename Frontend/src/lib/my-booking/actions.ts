@@ -11,9 +11,19 @@ import { cancelMessage, updateMessage, type ActionResult } from "@/lib/my-bookin
 
 const OBJECT_ID = /^[a-fA-F0-9]{24}$/
 
-export async function cancelBooking(bookingId: string): Promise<ActionResult> {
+// หน้าที่อนุญาตให้ redirect กลับมา (กัน open redirect)
+const DEFAULT_RETURN = "/my-booking"
+const ALLOWED_RETURN = new Set([DEFAULT_RETURN, "/admin/bookings"])
+const safeReturn = (path?: string) =>
+  path && ALLOWED_RETURN.has(path) ? path : DEFAULT_RETURN
+
+export async function cancelBooking(
+  bookingId: string,
+  returnTo?: string,
+): Promise<ActionResult> {
+  const back = safeReturn(returnTo)
   const session = await getServerSession(authOptions)
-  if (!session) redirect("/login?callbackUrl=/my-booking")
+  if (!session) redirect(`/login?callbackUrl=${back}`)
 
   if (!OBJECT_ID.test(bookingId)) {
     return { ok: false, message: cancelMessage(400) }
@@ -29,7 +39,7 @@ export async function cancelBooking(bookingId: string): Promise<ActionResult> {
     status = statusOf(err)
   }
 
-  if (status === 401) redirect("/session-expired?callbackUrl=/my-booking")
+  if (status === 401) redirect(`/session-expired?callbackUrl=${back}`)
 
   // 404 = ถูกยกเลิกไปแล้ว ถือว่าสำเร็จ
   if (failed && status !== 404) {
@@ -38,6 +48,7 @@ export async function cancelBooking(bookingId: string): Promise<ActionResult> {
 
   revalidatePath("/my-booking")
   revalidatePath("/spots")
+  revalidatePath("/admin/bookings")
   return { ok: true }
 }
 
@@ -46,11 +57,13 @@ type UpdateInput = {
   spotId: string
   bookingDate: string
   productType: string
+  returnTo?: string
 }
 
 export async function updateBooking(input: UpdateInput): Promise<ActionResult> {
+  const back = safeReturn(input.returnTo)
   const session = await getServerSession(authOptions)
-  if (!session) redirect("/login?callbackUrl=/my-booking")
+  if (!session) redirect(`/login?callbackUrl=${back}`)
 
   const { bookingId, spotId, bookingDate } = input
   const productType = typeof input.productType === "string" ? input.productType.trim() : ""
@@ -80,11 +93,12 @@ export async function updateBooking(input: UpdateInput): Promise<ActionResult> {
     status = statusOf(err)
   }
 
-  if (status === 401) redirect("/session-expired?callbackUrl=/my-booking")
+  if (status === 401) redirect(`/session-expired?callbackUrl=${back}`)
 
   if (failed) return { ok: false, message: updateMessage(status) }
 
   revalidatePath("/my-booking")
   revalidatePath("/spots")
+  revalidatePath("/admin/bookings")
   return { ok: true }
 }

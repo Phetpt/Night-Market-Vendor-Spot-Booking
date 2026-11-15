@@ -16,6 +16,9 @@ type Props = {
   shortDate: string
   usedOnNight: number
   dailyLimit: number
+  memberName?: string // admin เห็นชื่อเจ้าของ booking
+  compact?: boolean // ปุ่มเล็กสำหรับตาราง
+  returnTo?: string // หน้าที่ต้องกลับมาถ้า session หมดอายุ
 }
 
 function Row({ tone, icon, children }: { tone: string; icon: ReactNode; children: ReactNode }) {
@@ -40,6 +43,9 @@ export default function CancelBookingButton({
   shortDate,
   usedOnNight,
   dailyLimit,
+  memberName,
+  compact,
+  returnTo,
 }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const [error, setError] = useState<string | null>(null)
@@ -58,7 +64,7 @@ export default function CancelBookingButton({
   function confirm() {
     setError(null)
     startTransition(async () => {
-      const result = await cancelBooking(bookingId)
+      const result = await cancelBooking(bookingId, returnTo)
       if (result.ok) {
         dialogRef.current?.close()
       } else {
@@ -72,9 +78,13 @@ export default function CancelBookingButton({
       <button
         type="button"
         onClick={openDialog}
-        className="rounded-xl border border-[#DDE3F2] bg-white px-4 py-2 text-sm font-semibold text-[#1B2038] hover:border-[#8A3F1D]/50 hover:bg-[#FFF4EC] focus-visible:ring-2 focus-visible:ring-[#8A3F1D] focus-visible:ring-offset-2"
+        className={
+          compact
+            ? "rounded-xl border border-[#DDE3F2] bg-white px-3 py-1.5 text-sm font-semibold text-[#1B2038] hover:border-[#8A3F1D]/50 hover:bg-[#FFF4EC] focus-visible:ring-2 focus-visible:ring-[#8A3F1D] focus-visible:ring-offset-2"
+            : "rounded-xl border border-[#DDE3F2] bg-white px-4 py-2 text-sm font-semibold text-[#1B2038] hover:border-[#8A3F1D]/50 hover:bg-[#FFF4EC] focus-visible:ring-2 focus-visible:ring-[#8A3F1D] focus-visible:ring-offset-2"
+        }
       >
-        Cancel Booking
+        {compact ? "Cancel" : "Cancel Booking"}
       </button>
 
       <dialog
@@ -116,8 +126,8 @@ export default function CancelBookingButton({
               role="alert"
               className="rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-700"
             >
-              <span className="font-bold">Couldn&apos;t cancel.</span> {error} Your booking is
-              unchanged.
+              <span className="font-bold">Couldn&apos;t cancel.</span> {error}{" "}
+              {memberName ? `${memberName}'s booking` : "Your booking"} is unchanged.
             </div>
           )}
 
@@ -142,7 +152,7 @@ export default function CancelBookingButton({
               anyone can book it.
             </Row>
             <Row tone="bg-blue-50 text-blue-700" icon={<Gauge className="size-3.5" />}>
-              Your quota for {shortDate} goes from{" "}
+              {memberName ? `${memberName}'s quota` : "Your quota"} for {shortDate} goes from{" "}
               <strong className="text-[#1B2038]">
                 {usedOnNight} / {dailyLimit}
               </strong>{" "}
@@ -153,7 +163,8 @@ export default function CancelBookingButton({
               .
             </Row>
             <Row tone="bg-slate-100 text-slate-600" icon={<CircleX className="size-3.5" />}>
-              This can&apos;t be undone. You&apos;d need to book the spot again.
+              This can&apos;t be undone.{" "}
+              {memberName ? `${memberName} would need` : "You'd need"} to book the spot again.
             </Row>
           </ul>
 
