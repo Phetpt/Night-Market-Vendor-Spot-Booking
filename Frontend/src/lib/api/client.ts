@@ -6,6 +6,7 @@ type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "DELETE" // ค่าเริ่มต้นคือ GET
   body?: unknown // ข้อมูลที่จะส่งไป (จะถูกแปลงเป็น JSON ให้เอง)
   token?: string // JWT สำหรับ endpoint ที่ต้อง login
+  timeoutMs?: number
 }
 
 // ฟังก์ชันกลางสำหรับเรียก Backend ทุก endpoint
@@ -13,7 +14,7 @@ type RequestOptions = {
 // สำเร็จ → คืน { success: true, data }, ล้มเหลว → throw { status, message }
 export default async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<ApiSuccess<T>> {
   // ---------- Options ----------
-  const { method = "GET", body, token } = options
+  const { method = "GET", body, token, timeoutMs = 10_000 } = options
 
   // ---------- Request ----------
   const res = await fetch(`${env.API_URL}${path}`, {
@@ -25,6 +26,9 @@ export default async function apiRequest<T>(path: string, options: RequestOption
     },
     // GET ไม่มี body จึงส่ง undefined
     body: body !== undefined ? JSON.stringify(body) : undefined,
+
+    // เวลารอสูงสุดต่อ request เกินแล้วยกเลิก; ค่าเริ่มต้น 10 วินาที
+    signal: AbortSignal.timeout(timeoutMs),
   })
 
   // ---------- Response ----------
