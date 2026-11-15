@@ -10,10 +10,7 @@ import type { Booking } from "@/types/booking"
 import { splitBookings, summarize, DAILY_LIMIT } from "@/lib/my-booking/summary"
 import { formatDate, daysUntil, relativeLabel } from "@/lib/my-booking/format"
 import SummaryCards from "@/components/my-booking/SummaryCards"
-import BookingCard from "@/components/my-booking/BookingCard"
-
-import EmptyState from "@/components/my-booking/EmptyState"
-import BookingHistory from "@/components/my-booking/BookingHistory"
+import BookingsExplorer from "@/components/my-booking/BookingsExplorer"
 
 export default async function MyBookingPage() {
   const session = await getServerSession(authOptions)
@@ -29,7 +26,7 @@ export default async function MyBookingPage() {
     status = statusOf(err)
   }
 
-  if (status === 401) redirect("/login?callbackUrl=/my-booking")
+  if (status === 401) redirect("/session-expired?callbackUrl=/my-booking")
 
   if (bookings === null) {
     return (
@@ -85,40 +82,12 @@ export default async function MyBookingPage() {
         totalFees={summary.totalFees}
       />
 
-      <section className="space-y-4">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-xl font-bold text-[#1F2A44]">Active &amp; Upcoming Bookings</h2>
-          <span className="text-sm text-[#4A5470]">{upcoming.length} total</span>
-        </div>
-
-        {upcoming.length === 0 ? (
-          <EmptyState
-            title="No upcoming bookings"
-            description="Pick a night and reserve a spot for your stall."
-            action={{ href: "/spots", label: "Book a Spot" }}
-          />
-        ) : (
-          <div className="space-y-4">
-            {upcoming.map((b) => (
-              <BookingCard
-                key={b._id}
-                booking={b}
-                usedOnNight={perNight.get(b.bookingDate.slice(0, 10)) ?? 1}
-                today={today}
-                nightCounts={nightCounts}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="space-y-4">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-xl font-bold text-[#1F2A44]">Booking History</h2>
-          <span className="text-sm text-[#4A5470]">{past.length} total</span>
-        </div>
-        <BookingHistory bookings={past} />
-      </section>
+      <BookingsExplorer
+        upcoming={upcoming}
+        past={past}
+        today={today}
+        nightCounts={nightCounts}
+      />
     </div>
   )
 }
