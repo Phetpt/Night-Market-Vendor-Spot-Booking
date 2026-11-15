@@ -3,8 +3,16 @@ import CancelBookingButton from "./CancelBookingButton"
 
 import { formatDate, formatShortDate } from "@/lib/my-booking/format"
 import { DAILY_LIMIT } from "@/lib/my-booking/summary"
+import EditBookingButton from "@/components/my-booking/EditBookingButton"
 
-export default function BookingCard({ booking, usedOnNight }: { booking: Booking; usedOnNight: number }) {
+type Props = {
+  booking: Booking
+  usedOnNight: number
+  today: string
+  nightCounts: Record<string, number>
+}
+
+export default function BookingCard({ booking, usedOnNight, today, nightCounts }: Props) {
   const { spot } = booking
   const ref = `#${booking._id.slice(-8).toUpperCase()}`
   const dateLabel = formatDate(booking.bookingDate.slice(0, 10))
@@ -58,12 +66,12 @@ export default function BookingCard({ booking, usedOnNight }: { booking: Booking
             <span className="ml-1 text-sm font-semibold text-[#4A5470]">/ night</span>
           </p>
           <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="rounded-xl border border-[#8A3F1D] px-4 py-2 text-sm font-semibold text-[#8A3F1D] hover:bg-[#8A3F1D] hover:text-white focus-visible:ring-2 focus-visible:ring-[#8A3F1D] focus-visible:ring-offset-2"
-            >
-              Edit Booking
-            </button>
+            <EditBookingButton
+              booking={booking}
+              today={today}
+              nightCounts={nightCounts}
+              dailyLimit={DAILY_LIMIT}
+            />
 
             <CancelBookingButton
               bookingId={booking._id}
