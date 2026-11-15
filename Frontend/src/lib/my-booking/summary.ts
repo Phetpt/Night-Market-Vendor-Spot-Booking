@@ -7,13 +7,16 @@ const dateOf = (b: Booking) => b.bookingDate.slice(0, 10)//เอาตำแห
 
 // แยกเป็น upcoming / past (today เป็น "YYYY-MM-DD" ตามเวลา Bangkok)
 export function splitBookings(bookings: Booking[], today: string) {
+  const bySpot = (a: Booking, b: Booking) =>
+    a.spot.spotNumber.localeCompare(b.spot.spotNumber, undefined, { numeric: true })
+
   const upcoming = bookings
     .filter((b) => dateOf(b) >= today)
-    .sort((a, b) => dateOf(a).localeCompare(dateOf(b)))
+    .sort((a, b) => dateOf(a).localeCompare(dateOf(b)) || bySpot(a, b))
 
   const past = bookings
     .filter((b) => dateOf(b) < today)
-    .sort((a, b) => dateOf(b).localeCompare(dateOf(a)))
+    .sort((a, b) => dateOf(b).localeCompare(dateOf(a)) || bySpot(a, b))
 
   return { upcoming, past }
 }

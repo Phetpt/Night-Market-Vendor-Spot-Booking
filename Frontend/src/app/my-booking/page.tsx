@@ -12,6 +12,9 @@ import { formatDate, daysUntil, relativeLabel } from "@/lib/my-booking/format"
 import SummaryCards from "@/components/my-booking/SummaryCards"
 import BookingCard from "@/components/my-booking/BookingCard"
 
+import EmptyState from "@/components/my-booking/EmptyState"
+import BookingHistory from "@/components/my-booking/BookingHistory"
+
 export default async function MyBookingPage() {
   const session = await getServerSession(authOptions)
   if (!session) redirect("/login?callbackUrl=/my-booking")
@@ -39,7 +42,7 @@ export default async function MyBookingPage() {
   }
 
   const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Bangkok" })
-  const { upcoming } = splitBookings(bookings, today)
+  const { upcoming, past } = splitBookings(bookings, today)
   const summary = summarize(upcoming)
 
   return (
@@ -74,17 +77,33 @@ export default async function MyBookingPage() {
         totalFees={summary.totalFees}
       />
 
-      <section className="space-y-4">
+            <section className="space-y-4">
         <div className="flex items-baseline justify-between">
           <h2 className="text-xl font-bold text-[#1F2A44]">Active &amp; Upcoming Bookings</h2>
           <span className="text-sm text-[#4A5470]">{upcoming.length} total</span>
         </div>
 
-        <div className="space-y-4">
-          {upcoming.map((b) => (
-            <BookingCard key={b._id} booking={b} />
-          ))}
+        {upcoming.length === 0 ? (
+          <EmptyState
+            title="No upcoming bookings"
+            description="Pick a night and reserve a spot for your stall."
+            action={{ href: "/spots", label: "Book a Spot" }}
+          />
+        ) : (
+          <div className="space-y-4">
+            {upcoming.map((b) => (
+              <BookingCard key={b._id} booking={b} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-xl font-bold text-[#1F2A44]">Booking History</h2>
+          <span className="text-sm text-[#4A5470]">{past.length} total</span>
         </div>
+        <BookingHistory bookings={past} />
       </section>
     </div>
   )
