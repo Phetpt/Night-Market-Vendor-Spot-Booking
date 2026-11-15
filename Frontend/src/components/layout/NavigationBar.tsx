@@ -59,14 +59,6 @@ export default function NavigationBar() {
               </li>
             ))}
           </ul>
-
-            <div className="hidden md:block">
-              <NavigationItem
-                title="My Booking"
-                pageRef="/my-booking"
-                isActive={isActivePath(pathname, "/my-booking")}
-              />
-            </div>
           </div>
 
           {/* Right: Desktop Navigation */}
