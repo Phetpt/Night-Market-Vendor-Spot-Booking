@@ -51,6 +51,7 @@ export default async function MyBookingPage() {
     const d = b.bookingDate.slice(0, 10)
     perNight.set(d, (perNight.get(d) ?? 0) + 1)
   }
+  const nightCounts = Object.fromEntries(perNight)
 
   return (
     <div className="space-y-6 px-6 py-8">
@@ -99,7 +100,13 @@ export default async function MyBookingPage() {
         ) : (
           <div className="space-y-4">
             {upcoming.map((b) => (
-              <BookingCard key={b._id} booking={b} usedOnNight={perNight.get(b.bookingDate.slice(0, 10)) ?? 1} />
+              <BookingCard
+                key={b._id}
+                booking={b}
+                usedOnNight={perNight.get(b.bookingDate.slice(0, 10)) ?? 1}
+                today={today}
+                nightCounts={nightCounts}
+              />
             ))}
           </div>
         )}
