@@ -1,4 +1,4 @@
 export const navigationItems = [
   { title: "Spot", pageRef: "/spots" },
-  { title: "About", pageRef: "/about" },
+  { title: "My Booking", pageRef: "/my-booking" },
 ] as const;
