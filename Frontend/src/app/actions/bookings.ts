@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth"
 import { createBooking } from "@/lib/api/bookings"
 import type { ApiError } from "@/types/api"
 import { MAX_PER_DAY } from "@/config/booking"
-
+import { redirect } from "next/navigation"
 
 export type BookingItem = { spotId: string; productType: string }
 export type BookingResult = { spotId: string; ok: boolean; error?: string }
@@ -21,6 +21,8 @@ export async function bookSpots(date: string, items: BookingItem[]): Promise<Boo
 }
 
   const results: BookingResult[] = []
+  let sessionExpired = false
+
 
   // แปลง error จาก backend เป็นข้อความที่ผู้ใช้อ่านรู้เรื่อง
   function messageFor(err: Partial<ApiError>): string {
@@ -42,7 +44,7 @@ export async function bookSpots(date: string, items: BookingItem[]): Promise<Boo
     }
   }
 
-  for (const item of items) {
+    for (const item of items) {
     try {
       await createBooking(
         { spot: item.spotId, bookingDate: date, productType: item.productType.trim() },
@@ -51,10 +53,15 @@ export async function bookSpots(date: string, items: BookingItem[]): Promise<Boo
       results.push({ spotId: item.spotId, ok: true })
     } catch (error) {
       const err = error as Partial<ApiError>
+      if (err.status === 401) {
+        sessionExpired = true
+        break // token เสียแล้ว ช่องที่เหลือจะ 401 เหมือนกัน ไม่ต้องยิงต่อ
+      }
       results.push({ spotId: item.spotId, ok: false, error: messageFor(err) })
     }
   }
 
   revalidatePath("/spots")
+  if (sessionExpired) redirect("/session-expired?callbackUrl=/spots")
   return results
 }

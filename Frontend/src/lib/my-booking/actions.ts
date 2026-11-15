@@ -29,6 +29,8 @@ export async function cancelBooking(bookingId: string): Promise<ActionResult> {
     status = statusOf(err)
   }
 
+  if (status === 401) redirect("/session-expired?callbackUrl=/my-booking")
+
   // 404 = ถูกยกเลิกไปแล้ว ถือว่าสำเร็จ
   if (failed && status !== 404) {
     return { ok: false, message: cancelMessage(status) }
@@ -77,6 +79,8 @@ export async function updateBooking(input: UpdateInput): Promise<ActionResult> {
     failed = true
     status = statusOf(err)
   }
+
+  if (status === 401) redirect("/session-expired?callbackUrl=/my-booking")
 
   if (failed) return { ok: false, message: updateMessage(status) }
 
