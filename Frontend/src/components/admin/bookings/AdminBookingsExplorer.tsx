@@ -4,11 +4,12 @@ import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { CalendarDays, ChevronDown, Search, Ticket, Users, Wallet } from "lucide-react";
 import type { Booking } from "@/types/booking";
-import EditBookingButton from "@/components/my-booking/EditBookingButton";
+import type { Spot } from "@/types/spot";
+import EditBookingButton from "@/components/my-booking/edit-booking/EditBookingButton";
 import CancelBookingButton from "@/components/my-booking/CancelBookingButton";
 import { DAILY_LIMIT } from "@/lib/my-booking/summary";
 
-type Props = { bookings: Booking[]; today: string };
+type Props = { bookings: Booking[]; spots: Spot[]; today: string };
 
 const PAGE_SIZE = 6;
 const RETURN_TO = "/admin/bookings";
@@ -95,7 +96,7 @@ function SelectBox({
   );
 }
 
-export default function AdminBookingsExplorer({ bookings, today }: Props) {
+export default function AdminBookingsExplorer({ bookings, spots, today }: Props) {
   const [night, setNight] = useState("all"); // "all" = ทุกคืน
   const [zone, setZone] = useState("all");
   const [member, setMember] = useState("all");
@@ -386,6 +387,7 @@ export default function AdminBookingsExplorer({ bookings, today }: Props) {
                           nightCounts={countsByUser[b.user._id] ?? {}}
                           dailyLimit={DAILY_LIMIT}
                           returnTo={RETURN_TO}
+                          spots={spots}
                           compact
                         />
                         <CancelBookingButton

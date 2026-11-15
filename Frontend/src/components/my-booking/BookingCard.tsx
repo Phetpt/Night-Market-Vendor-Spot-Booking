@@ -3,7 +3,7 @@ import CancelBookingButton from "./CancelBookingButton"
 
 import { formatDate, formatShortDate } from "@/lib/my-booking/format"
 import { DAILY_LIMIT } from "@/lib/my-booking/summary"
-import EditBookingButton from "@/components/my-booking/EditBookingButton"
+import EditBookingButton from "@/components/my-booking/edit-booking/EditBookingButton"
 
 type Props = {
   booking: Booking
@@ -22,7 +22,7 @@ export default function BookingCard({ booking, usedOnNight, today, nightCounts }
       <div className="h-1.5 bg-emerald-400" />
 
       <div className="flex flex-col gap-5 p-5 md:flex-row md:items-center">
-        {/* Spot tile */}
+   
         <div className="flex h-[108px] w-full shrink-0 flex-col items-center justify-center rounded-xl border border-[#DDE3F2] bg-[#FFF4EC] md:w-[124px]">
           <span className="text-[10px] font-bold uppercase tracking-wide text-[#4A5470]">
             Spot ID
