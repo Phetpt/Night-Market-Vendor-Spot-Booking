@@ -7,6 +7,7 @@ import { createBooking } from "@/lib/api/bookings"
 import type { ApiError } from "@/types/api"
 import { MAX_PER_DAY } from "@/config/booking"
 
+
 export type BookingItem = { spotId: string; productType: string }
 export type BookingResult = { spotId: string; ok: boolean; error?: string }
 
