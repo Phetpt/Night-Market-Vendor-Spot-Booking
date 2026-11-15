@@ -24,3 +24,11 @@ export function relativeLabel(days: number) {
   if (days < 14) return `In ${days} days`
   return `In ${Math.round(days / 7)} weeks`
 }
+
+export function formatShortDate(date: string) {
+  return new Date(`${date}T00:00:00Z`).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  })
+}

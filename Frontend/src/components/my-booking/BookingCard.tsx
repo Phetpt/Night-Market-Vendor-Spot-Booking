@@ -1,9 +1,13 @@
 import type { Booking } from "@/types/booking"
-import { formatDate } from "@/lib/my-booking/format"
+import CancelBookingButton from "./CancelBookingButton"
 
-export default function BookingCard({ booking }: { booking: Booking }) {
+import { formatDate, formatShortDate } from "@/lib/my-booking/format"
+import { DAILY_LIMIT } from "@/lib/my-booking/summary"
+
+export default function BookingCard({ booking, usedOnNight }: { booking: Booking; usedOnNight: number }) {
   const { spot } = booking
   const ref = `#${booking._id.slice(-8).toUpperCase()}`
+  const dateLabel = formatDate(booking.bookingDate.slice(0, 10))
 
   return (
     <article className="overflow-hidden rounded-2xl border border-[#DDE3F2] bg-white">
@@ -38,9 +42,9 @@ export default function BookingCard({ booking }: { booking: Booking }) {
           <p className="text-sm text-[#4A5470]">
             Booking Ref <span className="font-semibold text-[#1B2038]">{ref}</span>
           </p>
-          <p className="text-lg font-bold text-[#1F2A44]">
-            {formatDate(booking.bookingDate.slice(0, 10))}
-          </p>
+
+          <p className="text-lg font-bold text-[#1F2A44]">{dateLabel}</p>
+
           <p className="text-sm text-[#4A5470]">
             Product Category:{" "}
             <span className="font-semibold text-[#1B2038]">{booking.productType}</span>
@@ -60,12 +64,20 @@ export default function BookingCard({ booking }: { booking: Booking }) {
             >
               Edit Booking
             </button>
-            <button
-              type="button"
-              className="rounded-xl border border-[#DDE3F2] bg-white px-4 py-2 text-sm font-semibold text-[#1B2038] hover:border-[#8A3F1D]/50 hover:bg-[#FFF4EC] focus-visible:ring-2 focus-visible:ring-[#8A3F1D] focus-visible:ring-offset-2"
-            >
-              Cancel Booking
-            </button>
+
+            <CancelBookingButton
+              bookingId={booking._id}
+              spotNumber={spot.spotNumber}
+              zone={spot.zone}
+              productType={booking.productType}
+              bookingRef={ref}
+              fee={spot.rentalFee}
+              dateLabel={dateLabel}
+              shortDate={formatShortDate(booking.bookingDate.slice(0, 10))}
+              usedOnNight={usedOnNight}
+              dailyLimit={DAILY_LIMIT}
+            />
+
           </div>
         </div>
       </div>
