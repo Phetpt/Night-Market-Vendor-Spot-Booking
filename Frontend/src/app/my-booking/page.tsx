@@ -45,6 +45,13 @@ export default async function MyBookingPage() {
   const { upcoming, past } = splitBookings(bookings, today)
   const summary = summarize(upcoming)
 
+// นับจำนวน booking ในแต่ละคืน ไว้บอกโควต้าในกล่องยกเลิก
+  const perNight = new Map<string, number>()
+  for (const b of upcoming) {
+    const d = b.bookingDate.slice(0, 10)
+    perNight.set(d, (perNight.get(d) ?? 0) + 1)
+  }
+
   return (
     <div className="space-y-6 px-6 py-8">
       <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -77,7 +84,7 @@ export default async function MyBookingPage() {
         totalFees={summary.totalFees}
       />
 
-            <section className="space-y-4">
+      <section className="space-y-4">
         <div className="flex items-baseline justify-between">
           <h2 className="text-xl font-bold text-[#1F2A44]">Active &amp; Upcoming Bookings</h2>
           <span className="text-sm text-[#4A5470]">{upcoming.length} total</span>
@@ -92,7 +99,7 @@ export default async function MyBookingPage() {
         ) : (
           <div className="space-y-4">
             {upcoming.map((b) => (
-              <BookingCard key={b._id} booking={b} />
+              <BookingCard key={b._id} booking={b} usedOnNight={perNight.get(b.bookingDate.slice(0, 10)) ?? 1} />
             ))}
           </div>
         )}
