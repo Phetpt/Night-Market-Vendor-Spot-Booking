@@ -9,7 +9,10 @@ import type { Spot } from "@/types/spot";
 type Props = {
   mode: "create" | "edit";
   spot?: Spot;
-  takenNumbers: string[]; // spotNumber ที่มีอยู่แล้ว ใช้เช็กซ้ำก่อนส่ง
+  takenNumbers: string[]; 
+  defaultZone?: string; 
+  label?: string; 
+  variant?: "primary" | "link";
 };
 
 type Key = "spotNumber" | "zone" | "spotSize" | "locationDescription" | "rentalFee";
@@ -23,26 +26,33 @@ const FIELDS: { key: Key; label: string; placeholder: string }[] = [
   { key: "rentalFee", label: "Rental fee (฿)", placeholder: "300" },
 ];
 
-function initial(spot?: Spot): Record<Key, string> {
+function initial(spot?: Spot, defaultZone?: string): Record<Key, string> {
   return {
     spotNumber: spot?.spotNumber ?? "",
-    zone: spot?.zone ?? "",
+    zone: spot?.zone ?? defaultZone ?? "",
     spotSize: spot?.spotSize ?? "2 x 2 m",
     locationDescription: spot?.locationDescription ?? "",
     rentalFee: spot ? String(spot.rentalFee) : "",
   };
 }
 
-export default function SpotFormButton({ mode, spot, takenNumbers }: Props) {
+export default function SpotFormButton({
+  mode,
+  spot,
+  takenNumbers,
+  defaultZone,
+  label = "Add spot",
+  variant = "primary",
+}: Props) {
   const router = useRouter();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [pending, startTransition] = useTransition();
-  const [values, setValues] = useState(initial(spot));
+  const [values, setValues] = useState(initial(spot, defaultZone));
   const [errors, setErrors] = useState<Errors>({});
   const [banner, setBanner] = useState<string | null>(null);
 
   function openDialog() {
-    setValues(initial(spot));
+    setValues(initial(spot, defaultZone));
     setErrors({});
     setBanner(null);
     dialogRef.current?.showModal();
@@ -99,19 +109,25 @@ export default function SpotFormButton({ mode, spot, takenNumbers }: Props) {
         <button
           type="button"
           onClick={openDialog}
-          className="rounded-xl bg-[#8A3F1D] px-4 py-2 text-sm font-semibold text-white hover:bg-[#6F3217]"
+          className={
+            variant === "link"
+              ? "text-sm font-semibold text-[#8A3F1D] hover:underline focus-visible:ring-2 focus-visible:ring-[#8A3F1D] focus-visible:ring-offset-2"
+              : "min-h-11 rounded-xl bg-[#8A3F1D] px-4 text-sm font-semibold text-white hover:bg-[#6F3217] focus-visible:ring-2 focus-visible:ring-[#8A3F1D] focus-visible:ring-offset-2"
+          }
         >
-          Add spot
+          {label}
         </button>
       ) : (
         <button
           type="button"
           onClick={openDialog}
-          className="text-sm font-semibold text-[#8A3F1D] hover:underline"
+          aria-label={`Edit spot ${spot?.spotNumber}`}
+          className="rounded-xl border border-[#8A3F1D] px-3 py-1.5 text-sm font-semibold text-[#8A3F1D] hover:bg-[#8A3F1D] hover:text-white focus-visible:ring-2 focus-visible:ring-[#8A3F1D] focus-visible:ring-offset-2"
         >
           Edit
         </button>
       )}
+
 
       <dialog
         ref={dialogRef}

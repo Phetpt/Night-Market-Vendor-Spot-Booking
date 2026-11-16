@@ -40,10 +40,12 @@ export default function DeleteSpotButton({ spotId, spotNumber, zone }: Props) {
       <button
         type="button"
         onClick={openDialog}
-        className="text-sm font-semibold text-red-600 hover:underline"
+        aria-label={`Delete spot ${spotNumber}`}
+        className="rounded-xl border border-red-600 px-3 py-1.5 text-sm font-semibold text-red-600 hover:bg-red-600 hover:text-white focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2"
       >
         Delete
       </button>
+
 
       <dialog
         ref={dialogRef}
