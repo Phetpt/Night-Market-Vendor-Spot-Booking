@@ -13,6 +13,8 @@ import {
 import { updateSpot } from "@/lib/api/spots"
 import { statusOf } from "@/lib/api/errors"
 import { spotMessage } from "@/lib/admin-spots/messages"
+import { buildSpotSize, parseSpotSize } from "@/lib/spots/format"
+import { validateDimension, validateFee } from "@/lib/spots/validation"
 import { cancelMessage, updateMessage, type ActionResult } from "@/lib/my-booking/messages"
 
 const OBJECT_ID = /^[a-fA-F0-9]{24}$/
@@ -140,11 +142,15 @@ export async function adminUpdateBooking(input: AdminUpdateInput): Promise<Actio
 
   let spotSize = ""
   if (spotChanges) {
-    spotSize = typeof spotChanges.spotSize === "string" ? spotChanges.spotSize.trim() : ""
+    const dims = typeof spotChanges.spotSize === "string" ? parseSpotSize(spotChanges.spotSize) : null
     const fee = spotChanges.rentalFee
-    if (!spotSize || typeof fee !== "number" || !Number.isFinite(fee) || fee < 0) {
+    if ( !dims || validateDimension(String(dims.width), "Width") !== null 
+    || validateDimension(String(dims.depth), "Depth") !== null 
+    || typeof fee !== "number" 
+    || validateFee(String(fee)) !== null ) {
       return { ok: false, message: spotMessage(400) }
     }
+    spotSize = buildSpotSize(dims.width, dims.depth)
   }
 
   const result = await updateBooking(bookingInput)

@@ -3,7 +3,7 @@
 import { useState, useId } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CodeXml, Menu, X } from "lucide-react";
+import { Menu, Store, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import AuthButtons from "../auth/AuthButtons";
 
@@ -42,13 +42,13 @@ export default function NavigationBar() {
             <Link
               href="/"
               className="flex min-w-0 items-center gap-3 text-zinc-950">
-              <CodeXml
+              <Store
                 size={28}
                 strokeWidth={2.5}
                 className="shrink-0"/>
 
               <span className="truncate text-lg font-semibold">
-                Night Market Vendor Spot
+                JONG LOK
               </span>
             </Link>
 

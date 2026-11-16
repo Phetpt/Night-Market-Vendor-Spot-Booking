@@ -8,6 +8,9 @@ import { adminUpdateBooking, updateBooking } from "@/lib/my-booking/actions"
 import { formatShortDate } from "@/lib/my-booking/format"
 import type { Booking } from "@/types/booking"
 import type { Spot } from "@/types/spot"
+import { buildSpotSize, sizeToFields } from "@/lib/spots/format"
+import { validateDimension, validateFee } from "@/lib/spots/validation"
+
 
 import AdminSpotFields from "./AdminSpotFields"
 import BookingParametersSection from "./BookingParametersSection"
@@ -47,7 +50,8 @@ export default function EditBookingButton({
   const [date, setDate] = useState(originalDate)
   const [product, setProduct] = useState(booking.productType)
   const [spotId, setSpotId] = useState(spot._id)
-  const [size, setSize] = useState(spot.spotSize)
+  const [size, setSize] = useState(() => sizeToFields(spot.spotSize))
+
   const [fee, setFee] = useState(String(spot.rentalFee))
   const [dateError, setDateError] = useState<string | null>(null)
   const [productError, setProductError] = useState<string | null>(null)
@@ -79,8 +83,14 @@ export default function EditBookingButton({
   // spot ที่เลือกอยู่ (ไม่ใช่โหมด admin = spot เดิมของ booking)
   const selected = spots?.find((s) => s._id === spotId) ?? spot
   const feeNumber = fee.trim() === "" ? NaN : Number(fee)
-  const spotChanged =
-    adminMode && (size.trim() !== selected.spotSize || feeNumber !== selected.rentalFee)
+  const selectedSize = sizeToFields(selected.spotSize)
+  const sizeEdited = size.width !== selectedSize.width || size.depth !== selectedSize.depth
+  const spotChanged = adminMode && (sizeEdited || feeNumber !== selected.rentalFee)
+  const sizeError = validateDimension(size.width, "Width") ?? validateDimension(size.depth, "Depth")
+
+  const feeError = validateFee(fee)
+  const newSize = sizeError ? null : buildSpotSize(Number(size.width), Number(size.depth))
+
 
   // spot ที่เลือกได้ = ว่างในวันที่เลือก (spot เดิมของ booking นี้ยังเลือกได้ถ้าไม่เปลี่ยนวัน)
   const availableSpots = useMemo(
@@ -101,7 +111,7 @@ export default function EditBookingButton({
     setSpotId(id)
     const s = spots?.find((x) => x._id === id)
     if (s) {
-      setSize(s.spotSize)
+      setSize(sizeToFields(s.spotSize))
       setFee(String(s.rentalFee))
     }
   }
@@ -110,7 +120,7 @@ export default function EditBookingButton({
     setDate(originalDate)
     setProduct(booking.productType)
     setSpotId(spot._id)
-    setSize(spot.spotSize)
+    setSize(sizeToFields(spot.spotSize))
     setFee(String(spot.rentalFee))
     setDateError(null)
     setProductError(null)
@@ -162,8 +172,8 @@ export default function EditBookingButton({
         setBanner("That spot is not available on the selected night. Pick another spot.")
         ok = false
       }
-      if (size.trim().length === 0 || !Number.isFinite(feeNumber) || feeNumber < 0) {
-        setBanner("Footprint is required and the rental fee must be 0 or more.")
+      if (spotChanged && (sizeError || feeError)) {
+        setBanner(sizeError ?? feeError)
         ok = false
       }
     }
@@ -185,7 +195,7 @@ export default function EditBookingButton({
         ? await adminUpdateBooking({
             ...payload,
             spotChanges: spotChanged
-              ? { spotSize: size.trim(), rentalFee: feeNumber }
+              ? { spotSize: newSize ?? "", rentalFee: feeNumber }
               : undefined,
           })
         : await updateBooking(payload)

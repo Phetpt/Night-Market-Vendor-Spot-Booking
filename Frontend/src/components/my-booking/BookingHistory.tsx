@@ -1,6 +1,7 @@
 import type { Booking } from "@/types/booking"
 import { formatDate } from "@/lib/my-booking/format"
 import EmptyState from "./EmptyState"
+import { formatCurrency } from "@/lib/spots/format"
 
 export default function BookingHistory({ bookings }: { bookings: Booking[] }) {
   if (bookings.length === 0) {
@@ -40,7 +41,7 @@ export default function BookingHistory({ bookings }: { bookings: Booking[] }) {
               </td>
               <td className={`${td} text-[#4A5470]`}>{b.productType}</td>
               <td className={`${td} font-semibold text-[#A33900]`}>
-                ฿{b.spot.rentalFee.toLocaleString("en-US")}
+                {formatCurrency(b.spot.rentalFee)}
               </td>
               <td className={`${td} text-[#4A5470]`}>
                 #{b._id.slice(-8).toUpperCase()}

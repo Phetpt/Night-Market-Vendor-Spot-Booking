@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react"
 import type { ReactNode } from "react"
 import { CircleAlert, CircleX, Gauge, Trash2, X } from "lucide-react"
 import { cancelBooking } from "@/lib/my-booking/actions"
+import { formatCurrency } from "@/lib/spots/format"
 
 type Props = {
   bookingId: string
@@ -142,7 +143,7 @@ export default function CancelBookingButton({
               </p>
               <p className="text-xs text-[#4A5470]">Booking ref {bookingRef}</p>
             </div>
-            <p className="text-sm font-bold text-[#A33900]">฿{fee.toLocaleString("en-US")}</p>
+            <p className="text-sm font-bold text-[#A33900]">{formatCurrency(fee)}</p>
           </div>
 
           {/* What will happen */}

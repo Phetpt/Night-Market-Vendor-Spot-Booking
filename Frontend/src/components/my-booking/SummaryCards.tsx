@@ -1,4 +1,5 @@
 import { Moon, Ticket, Wallet } from "lucide-react"
+import { formatCurrency } from "@/lib/spots/format"
 
 type Props = {
   usedOnNextNight: number
@@ -81,7 +82,7 @@ export default function SummaryCards({
           <p className={label}>Total fees (upcoming)</p>
         </div>
         <p className="mt-4 text-2xl font-bold text-[#A33900]">
-          ฿{totalFees.toLocaleString("en-US")}
+          {formatCurrency(totalFees)}
         </p>
         <p className="mt-3 text-sm text-[#4A5470]">Across all upcoming nights</p>
       </article>
