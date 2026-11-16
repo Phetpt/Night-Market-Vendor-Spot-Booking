@@ -8,16 +8,16 @@ import type { Spot } from "@/types/spot";
 import EditBookingButton from "@/components/my-booking/edit-booking/EditBookingButton";
 import CancelBookingButton from "@/components/my-booking/CancelBookingButton";
 import { DAILY_LIMIT } from "@/lib/my-booking/summary";
+import { formatCurrency } from "@/lib/spots/format"
 
 type Props = { bookings: Booking[]; spots: Spot[]; today: string };
 
 const PAGE_SIZE = 6;
 const RETURN_TO = "/admin/bookings";
 
-const dateOf = (b: Booking) => b.bookingDate.slice(0, 10);
-// รูปแบบเดียวกับ BookingCard / BookingHistory / EditBookingButton
-const refOf = (b: Booking) => `#${b._id.slice(-8).toUpperCase()}`;
-const baht = (n: number) => `฿${n.toLocaleString("en-US")}`;
+const dateOf = (b: Booking) => b.bookingDate.slice(0, 10)
+const refOf = (b: Booking) => `#${b._id.slice(-8).toUpperCase()}`
+const baht = formatCurrency
 
 const fieldBase =
   "h-11 w-full rounded-xl border border-[#DDE3F2] bg-white text-sm text-[#1F2A44] outline-none focus-visible:ring-2 focus-visible:ring-[#8A3F1D] focus-visible:ring-offset-2";

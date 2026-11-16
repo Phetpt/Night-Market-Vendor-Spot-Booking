@@ -1,22 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import type { ReactNode } from "react";
-import { ChevronDown, Layers, MapPin, Search, Wallet } from "lucide-react";
-import type { Spot } from "@/types/spot";
-import SpotFormButton from "@/components/admin/spots/SpotFormButton";
-import DeleteSpotButton from "@/components/admin/spots/DeleteSpotButton";
+import { useMemo, useState } from "react"
+import type { ReactNode } from "react"
+import { ChevronDown, Layers, MapPin, Search, Wallet } from "lucide-react"
+import type { Spot } from "@/types/spot"
+import SpotFormButton from "@/components/admin/spots/SpotFormButton"
+import DeleteSpotButton from "@/components/admin/spots/DeleteSpotButton"
+import { formatCurrency, formatSpotSize, sizeArea } from "@/lib/spots/format"
 
 type Props = { spots: Spot[] };
 
-const baht = (n: number) => `฿${n.toLocaleString("en-US")}`;
+const baht = formatCurrency;
 const byNumber = (a: Spot, b: Spot) =>
   a.spotNumber.localeCompare(b.spotNumber, undefined, { numeric: true });
 
-// "A" -> "Zone A", แต่ "Food zone" ยังเป็น "Food zone"
 function zoneLabel(zone: string) {
-  const z = zone.trim();
-  return /^zone\b|\bzone$/i.test(z) ? z : `Zone ${z}`;
+  return zone.trim();
 }
 
 function feeRange(rows: Spot[]) {
@@ -113,16 +112,17 @@ export default function AdminSpotsExplorer({ spots }: Props) {
   const [query, setQuery] = useState("");
 
   const sorted = useMemo(() => [...spots].sort(byNumber), [spots]);
-  const takenNumbers = useMemo(() => sorted.map((s) => s.spotNumber), [sorted]);
+  
   // เรียงโซนตาม spot แรกที่เจอ (A01 -> B01 -> ...)
   const zones = useMemo(() => [...new Set(sorted.map((s) => s.zone))], [sorted]);
   const sizes = useMemo(
     () =>
-      [...new Set(sorted.map((s) => s.spotSize))].sort((a, b) =>
-        a.localeCompare(b, undefined, { numeric: true }),
+      [...new Set(sorted.map((s) => formatSpotSize(s.spotSize)))].sort(
+        (a, b) => sizeArea(a) - sizeArea(b) || a.localeCompare(b, undefined, { numeric: true }),
       ),
     [sorted],
   );
+
 
   // ถ้าโซน/ขนาดที่เลือกไว้หายไปแล้ว (เช่นลบ spot สุดท้ายของโซน) ให้ถือว่าเลือก "all"
   const activeZone = zones.includes(zone) ? zone : "all";
@@ -133,7 +133,7 @@ export default function AdminSpotsExplorer({ spots }: Props) {
     () =>
       sorted
         .filter((s) => activeZone === "all" || s.zone === activeZone)
-        .filter((s) => activeSize === "all" || s.spotSize === activeSize)
+        .filter((s) => activeSize === "all" || formatSpotSize(s.spotSize) === activeSize)
         .filter(
           (s) =>
             q === "" ||
@@ -166,7 +166,7 @@ export default function AdminSpotsExplorer({ spots }: Props) {
           <h1 className="text-3xl font-bold text-[#1F2A44]">Manage spots</h1>
           <p className="text-[#4A5470]">Add, edit and remove the stalls vendors can book.</p>
         </div>
-        <SpotFormButton mode="create" takenNumbers={takenNumbers} />
+        <SpotFormButton mode="create" spots={sorted} />
       </header>
 
       {/* Summary: คำนวณจาก spot ทั้งหมด ไม่เปลี่ยนตาม filter */}
@@ -314,7 +314,7 @@ export default function AdminSpotsExplorer({ spots }: Props) {
                           </span>
                         </td>
                         <td className={`${td} whitespace-nowrap align-middle text-[#4A5470]`}>
-                          {s.spotSize}
+                          {formatSpotSize(s.spotSize)}
                         </td>
                         <td className={`${td} align-middle text-[#4A5470]`}>
                           <div className="truncate" title={s.locationDescription}>
@@ -328,7 +328,7 @@ export default function AdminSpotsExplorer({ spots }: Props) {
                         </td>
                         <td className={`${td} align-middle`}>
                           <div className="flex items-center gap-2">
-                            <SpotFormButton mode="edit" spot={s} takenNumbers={takenNumbers} />
+                            <SpotFormButton mode="edit" spot={s} spots={sorted} />
                             <DeleteSpotButton
                               spotId={s._id}
                               spotNumber={s.spotNumber}

@@ -24,12 +24,11 @@ export async function bookSpots(date: string, items: BookingItem[]): Promise<Boo
   let sessionExpired = false
 
 
-  // แปลง error จาก backend เป็นข้อความที่ผู้ใช้อ่านรู้เรื่อง
+  // แปลง error จาก backend เป็นข้อความ
   function messageFor(err: Partial<ApiError>): string {
     switch (err.status) {
       case 400:
       case 409:
-        // กฎของระบบ เช่น ช่องถูกจองแล้ว / เกิน 3 ช่องต่อวัน ข้อความจาก backend ใช้ได้
         return err.message ?? "This spot can't be booked"
       case 401:
         return "Your session has expired, please log in again"

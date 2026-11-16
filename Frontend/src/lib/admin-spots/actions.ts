@@ -3,20 +3,28 @@
 import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { authOptions } from "@/lib/auth";
-import { createSpot, updateSpot, deleteSpot } from "@/lib/api/spots";
+import { createSpot, updateSpot, deleteSpot, listSpots } from "@/lib/api/spots";
 import type { ActionResult } from "@/lib/my-booking/messages";
-import { spotMessage } from "./messages";
+import { buildSpotSize } from "@/lib/spots/format";
+import { ZONE_CODE_PATTERN, cleanText, validateDimension, validateFee, validateLocation, validateZoneName } from "@/lib/spots/validation";
+import { deriveZones, getNextSpotNumber, zoneNameTaken } from "@/lib/spots/zones";
+import { spotErrors, spotMessage } from "./messages";
 
 const OBJECT_ID = /^[a-fA-F0-9]{24}$/;
 
 type SaveSpotInput = {
   id?: string; // มี id = แก้ไข, ไม่มี = สร้างใหม่
-  spotNumber: string;
-  zone: string;
-  spotSize: string;
+  zoneCode?: string; // ใช้ตอนสร้าง: รหัสโซน (A-Z)
+  newZoneName?: string; // ใช้ตอนสร้างโซนใหม่เท่านั้น
+  width: string;
+  depth: string;
   locationDescription: string;
-  rentalFee: number;
+  rentalFee: string;
 };
+
+export type SaveSpotResult =
+  | { ok: true; spotNumber?: string }
+  | { ok: false; message: string };
 
 function statusOf(err: unknown): number | undefined {
   if (typeof err === "object" && err !== null && "status" in err) {
@@ -26,46 +34,96 @@ function statusOf(err: unknown): number | undefined {
   return undefined;
 }
 
-export async function saveSpot(input: SaveSpotInput): Promise<ActionResult> {
+function revalidateSpotPages() {
+  revalidatePath("/admin/spots");
+  revalidatePath("/spots");
+}
+
+export async function saveSpot(input: SaveSpotInput): Promise<SaveSpotResult> {
   const session = await getServerSession(authOptions);
   if (!session) return { ok: false, message: spotMessage(401) };
   if (session.user.role !== "admin") return { ok: false, message: spotMessage(403) };
 
-  const body = {
-    spotNumber: input.spotNumber.trim(),
-    zone: input.zone.trim(),
-    spotSize: input.spotSize.trim(),
-    locationDescription: input.locationDescription.trim(),
-    rentalFee: input.rentalFee,
+  // ---- ตรวจฟิลด์ที่ใช้ทั้งตอนสร้างและแก้ไข ----
+  const location = cleanText(input.locationDescription ?? "");
+  const firstError =
+    validateDimension(input.width ?? "", "Width") ??
+    validateDimension(input.depth ?? "", "Depth") ??
+    validateFee(input.rentalFee ?? "") ??
+    validateLocation(location);
+  if (firstError) return { ok: false, message: firstError };
+
+  const common = {
+    spotSize: buildSpotSize(Number(input.width), Number(input.depth)),
+    locationDescription: location,
+    rentalFee: Number(input.rentalFee),
   };
 
-  if (
-    !body.spotNumber ||
-    !body.zone ||
-    !body.spotSize ||
-    !body.locationDescription ||
-    !Number.isFinite(body.rentalFee) ||
-    body.rentalFee < 0
-  ) {
-    return { ok: false, message: spotMessage(400) };
-  }
-  if (input.id && !OBJECT_ID.test(input.id)) {
-    return { ok: false, message: spotMessage(404) };
+  // แก้ไข: ส่งแค่ 3 ฟิลด์ ไม่แตะ spotNumber / zone
+  if (input.id) {
+    if (!OBJECT_ID.test(input.id)) return { ok: false, message: spotMessage(404) };
+    try {
+      await updateSpot(input.id, common, session.accessToken);
+    } catch (err) {
+      return { ok: false, message: spotMessage(statusOf(err)) };
+    }
+    revalidateSpotPages();
+    return { ok: true };
   }
 
+  // สร้างใหม่
+  const code = (input.zoneCode ?? "").trim().toUpperCase();
+  if (!ZONE_CODE_PATTERN.test(code)) {
+    return { ok: false, message: spotErrors.zoneRequired };
+  }
+
+  // ดึงรายการล่าสุด แล้วคำนวณจากข้อมูลนี้ 
+  let spots;
   try {
-    if (input.id) {
-      await updateSpot(input.id, body, session.accessToken);
-    } else {
-      await createSpot(body, session.accessToken);
-    }
+    spots = (await listSpots()).spots;
   } catch (err) {
     return { ok: false, message: spotMessage(statusOf(err)) };
   }
 
-  revalidatePath("/admin/spots");
-  revalidatePath("/spots");
-  return { ok: true };
+  const existingZone = deriveZones(spots).find((z) => z.code === code);
+  let zoneName: string;
+  if (existingZone) {
+    zoneName = existingZone.name;
+  } else {
+    zoneName = cleanText(input.newZoneName ?? "");
+    const nameError = validateZoneName(zoneName);
+    if (nameError) return { ok: false, message: nameError };
+    if (zoneNameTaken(spots, zoneName)) {
+      return { ok: false, message: spotErrors.zoneNameTaken(zoneName) };
+    }
+  }
+
+  const next = getNextSpotNumber(spots, code);
+  if (!next.ok) return { ok: false, message: spotErrors.zoneFull(code) };
+
+  try {
+    await createSpot(
+      { spotNumber: next.spotNumber, zone: zoneName, ...common },
+      session.accessToken,
+    );
+  } catch (err) {
+    return { ok: false, message: spotMessage(statusOf(err)) };
+  }
+
+  // ตรวจซ้ำหลังบันทึก
+  try {
+    const after = (await listSpots()).spots;
+    const copies = after.filter((s) => s.spotNumber === next.spotNumber).length;
+    if (copies > 1) {
+      revalidateSpotPages();
+      return { ok: false, message: spotErrors.duplicateSuspected(next.spotNumber) };
+    }
+  } catch {
+    // ตรวจซ้ำไม่ได้ก็ไม่ถือว่าล้มเหลว เพราะ spot ถูกสร้างแล้ว
+  }
+
+  revalidateSpotPages();
+  return { ok: true, spotNumber: next.spotNumber };
 }
 
 export async function removeSpot(spotId: string): Promise<ActionResult> {

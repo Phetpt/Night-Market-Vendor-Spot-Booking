@@ -1,5 +1,5 @@
 import { Ruler } from "lucide-react"
-
+import { formatCurrency, formatSpotSize } from "@/lib/spots/format"
 import type { BookingSpot } from "@/types/booking"
 import { Tile } from "./booking-ui"
 
@@ -15,12 +15,12 @@ export default function SpotSummary({ spot }: { spot: BookingSpot }) {
       <Tile title="Physical footprint">
         <p className="flex items-center gap-1.5 font-semibold">
           <Ruler className="size-4 text-[#4A5470]" />
-          {spot.spotSize}
+          {formatSpotSize(spot.spotSize)}
         </p>
       </Tile>
       <Tile title="Rental fee">
         <p className="text-2xl font-bold text-[#A33900]">
-          ฿{spot.rentalFee.toLocaleString("en-US")}
+          {formatCurrency(spot.rentalFee)}
           <span className="ml-1 text-xs font-semibold text-[#4A5470]">/ night</span>
         </p>
       </Tile>

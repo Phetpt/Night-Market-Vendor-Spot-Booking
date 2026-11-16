@@ -1,4 +1,5 @@
 import { Spot, SpotStatus } from "@/types/spot";
+import { formatCurrency, formatSpotSize } from "@/lib/spots/format"
 
 const STYLES: Record<SpotStatus, string> = {
   available: "border-[#DDE3F2] bg-white text-[#1B2038]",
@@ -45,7 +46,7 @@ export function SpotCard({ spot, status, onToggle }: Props) {
           {spot.spotNumber}
         </span>
         <span className="block text-sm">
-          {spot.spotSize} · ฿{spot.rentalFee}
+          {formatSpotSize(spot.spotSize)} · {formatCurrency(spot.rentalFee)}
         </span>
         <span className={`block text-sm font-semibold ${LABEL_COLORS[status]}`}>
           {LABELS[status]}
