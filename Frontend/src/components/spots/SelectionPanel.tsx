@@ -4,12 +4,13 @@ import { useState } from "react"
 import Link from "next/link"
 import type { Spot } from "@/types/spot"
 import type { BookingResult } from "@/app/actions/bookings"
+import { formatCurrency, formatSpotSize } from "@/lib/spots/format"
 
 type Props = {
   selectedSpots: Spot[]
   onRemove: (id: string) => void
   onConfirm: () => void
-  maxSpots: number // เพดานช่องต่อวัน (ส่งมาจาก parent จะได้ไม่ซ้ำกับ MAX_PER_DAY)
+  maxSpots: number // เพดานช่องต่อวัน 
   productTypes: Record<string, string>
   onProductTypeChange: (id: string, value: string) => void
   alreadyBookedCount: number
@@ -65,7 +66,7 @@ export default function SelectionPanel({
     timeZone: "UTC",
   })
 
-  // ---------- Render ----------
+  //Render 
   return (
     <div className="flex w-full flex-col items-start gap-2 rounded-3xl border border-indigo-100 bg-white px-6 py-5">
       {/* Header */}
@@ -123,11 +124,11 @@ export default function SelectionPanel({
                 <div>
                   <div className="font-bold">{spot.spotNumber}</div>
                   <div className="text-sm text-[#4A5470]">
-                    {spot.zone} · {spot.spotSize}
+                    {spot.zone} · {formatSpotSize(spot.spotSize)}
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-2.5">
-                  <span className="font-bold">฿{spot.rentalFee}</span>
+                  <span className="font-bold">{formatCurrency(spot.rentalFee)}</span>
                   <button
                     type="button"
                     onClick={() => onRemove(spot._id)}
@@ -170,7 +171,7 @@ export default function SelectionPanel({
         <>
           <div className="mt-2 flex w-full items-center justify-between border-t border-indigo-100 pt-4">
             <span className="text-sm text-[#4A5470]">Total</span>
-            <span className="text-xl font-bold text-[#A33900]">฿ {total}/day</span>
+            <span className="text-xl font-bold text-[#A33900]">{formatCurrency(total)}/day</span>
           </div>
 
           {isLoggedIn ? (

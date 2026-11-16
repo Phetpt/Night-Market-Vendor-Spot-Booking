@@ -116,12 +116,14 @@ export default function SpotsExplorer({ spots, bookedSpotIds, selectedDate, toda
     <main className="px-6 py-8 space-y-6">
       {/* Header + เลือกวันที่ */}
       <div>
-        <h1 className="font-bold text-3xl text-[#1F2A44]">Pick a spot for your night</h1>
+        <h1 className="font-bold text-3xl text-[#1F2A44]">Find Your Perfect Spot at the Night Market</h1>
         <h2 className="text-[#4A5470]">
-          Choose a date to see what&apos;s open. Anyone can browse, and you log in when
-          you&apos;re ready to book.
+          Browse available spots, book instantly, and start growing your business.
         </h2>
-        <DateStrip value={selectedDate} today={today} />
+        <div className="mt-6">
+          <DateStrip value={selectedDate} today={today}/>
+        </div>
+        
       </div>
 
       <div className="grid grid-cols-[1fr_340px] gap-6 items-start">

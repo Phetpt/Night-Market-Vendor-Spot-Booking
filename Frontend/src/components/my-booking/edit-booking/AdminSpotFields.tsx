@@ -3,21 +3,26 @@
 import { useId } from "react"
 import { ChevronDown } from "lucide-react"
 
+import SizeFields from "@/components/admin/spots/SizeFields"
+import { formatCurrency, formatSpotSize } from "@/lib/spots/format"
+import { sanitizeDecimal } from "@/lib/spots/validation"
 import type { BookingSpot } from "@/types/booking"
 import type { Spot } from "@/types/spot"
 import { inputBase, label } from "./booking-ui"
+
+type Size = { width: string; depth: string }
 
 type Props = {
   spotsByZone: Record<string, Spot[]>
   selectedAvailable: boolean // spot ที่เลือกอยู่ยังอยู่ในรายการที่เลือกได้หรือไม่
   spotId: string
   selected: BookingSpot
-  size: string
+  size: Size
   fee: string
   spotChanged: boolean
   disabled: boolean
   onPickSpot: (id: string) => void
-  onSizeChange: (value: string) => void
+  onSizeChange: (value: Size) => void
   onFeeChange: (value: string) => void
 }
 
@@ -35,7 +40,6 @@ export default function AdminSpotFields({
   onFeeChange,
 }: Props) {
   const spotFieldId = useId()
-  const sizeId = useId()
   const feeId = useId()
 
   return (
@@ -62,7 +66,7 @@ export default function AdminSpotFields({
                 <optgroup key={zone} label={zone}>
                   {list.map((s) => (
                     <option key={s._id} value={s._id}>
-                      {s.spotNumber} · {s.spotSize} · ฿{s.rentalFee.toLocaleString("en-US")}
+                      {s.spotNumber} · {formatSpotSize(s.spotSize)} · {formatCurrency(s.rentalFee)}
                     </option>
                   ))}
                 </optgroup>
@@ -88,18 +92,16 @@ export default function AdminSpotFields({
 
       <div className="grid gap-3 md:grid-cols-2">
         <div>
-          <label htmlFor={sizeId} className={label}>
-            Physical footprint
-          </label>
-          <input
-            id={sizeId}
-            type="text"
-            maxLength={50}
-            value={size}
-            disabled={disabled}
-            onChange={(e) => onSizeChange(e.target.value)}
-            className={`${inputBase} mt-1 border-[#DDE3F2]`}
-          />
+          <p className={label}>Physical footprint</p>
+          <div className="mt-1">
+            <SizeFields
+              width={size.width}
+              depth={size.depth}
+              onChange={onSizeChange}
+              inputClass={`${inputBase} border-[#DDE3F2]`}
+              disabled={disabled}
+            />
+          </div>
         </div>
         <div>
           <label htmlFor={feeId} className={label}>
@@ -107,12 +109,12 @@ export default function AdminSpotFields({
           </label>
           <input
             id={feeId}
-            type="number"
-            min={0}
-            step="1"
+            type="text"
+            inputMode="decimal"
+            maxLength={9}
             value={fee}
             disabled={disabled}
-            onChange={(e) => onFeeChange(e.target.value)}
+            onChange={(e) => onFeeChange(sanitizeDecimal(e.target.value, 2))}
             className={`${inputBase} mt-1 border-[#DDE3F2]`}
           />
         </div>

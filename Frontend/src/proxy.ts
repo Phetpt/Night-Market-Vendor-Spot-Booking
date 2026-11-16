@@ -20,4 +20,4 @@ export async function proxy(req: NextRequest) {
   return NextResponse.next()
 }
 
-export const config = { matcher: ["/my-booking/:path*", "/login", "/register"] }
+export const config = { matcher: ["/my-booking/:path*", "/admin/:path*", "/login", "/register"] }

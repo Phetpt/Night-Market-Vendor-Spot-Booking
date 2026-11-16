@@ -4,6 +4,7 @@ import CancelBookingButton from "./CancelBookingButton"
 import { formatDate, formatShortDate } from "@/lib/my-booking/format"
 import { DAILY_LIMIT } from "@/lib/my-booking/summary"
 import EditBookingButton from "@/components/my-booking/edit-booking/EditBookingButton"
+import { formatCurrency, formatSpotSize } from "@/lib/spots/format"
 
 type Props = {
   booking: Booking
@@ -28,7 +29,7 @@ export default function BookingCard({ booking, usedOnNight, today, nightCounts }
             Spot ID
           </span>
           <span className="text-3xl font-bold text-[#8A3F1D]">{spot.spotNumber}</span>
-          <span className="text-xs font-semibold text-[#4A5470]">{spot.spotSize}</span>
+          <span className="text-xs font-semibold text-[#4A5470]">{formatSpotSize(spot.spotSize)}</span>
         </div>
 
         {/* Details */}
@@ -62,7 +63,7 @@ export default function BookingCard({ booking, usedOnNight, today, nightCounts }
         {/* Fee + actions */}
         <div className="flex flex-col gap-3 md:items-end">
           <p className="text-xl font-bold text-[#A33900]">
-            ฿{spot.rentalFee.toLocaleString("en-US")}
+            {formatCurrency(spot.rentalFee)}
             <span className="ml-1 text-sm font-semibold text-[#4A5470]">/ night</span>
           </p>
           <div className="flex flex-wrap gap-2">
