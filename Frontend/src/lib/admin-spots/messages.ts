@@ -1,7 +1,7 @@
 export function spotMessage(status?: number): string {
   switch (status) {
     case 400:
-      return "Please check the fields. Every field is required and the fee must be a number.";
+      return "Please check the fields and try again.";
     case 401:
       return "Your session expired. Please log out and log in again.";
     case 403:
@@ -20,3 +20,13 @@ export function spotMessage(status?: number): string {
       return "Something went wrong.";
   }
 }
+
+export const spotErrors = {
+  zoneRequired: "Select a zone.",
+  zoneFull: (code: string) =>
+    `Zone ${code} is full (99 spots). Create a new zone instead.`,
+  zoneNameTaken: (name: string) => `A zone named "${name}" already exists.`,
+  duplicateSuspected: (spotNumber: string) =>
+    `Spot ${spotNumber} was saved, but another spot with the same number now exists. ` +
+    `Another admin may have added one at the same time. Please check the list.`,
+};
