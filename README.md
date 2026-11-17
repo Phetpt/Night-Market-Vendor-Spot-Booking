@@ -21,7 +21,7 @@
 
 ## Tech Stack
 
-| ส่วน | เทคโนโลยี |
+| Layer | Technology |
 |---|---|
 | Frontend | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, shadcn/ui, Redux Toolkit, NextAuth |
 | Backend | Node.js, Express 5, Mongoose |
@@ -35,8 +35,8 @@
 ```
 .
 ├── Backend/                # REST API (Express + MongoDB)
-│   ├── config/             # db.js และ config.env (ไม่ commit)
-│   ├── controllers/        # request handlers และ business rules
+│   ├── config/             # db.js and config.env (not committed)
+│   ├── controllers/        # request handlers and business rules
 │   ├── middleware/
 │   ├── models/             # User, Spot, Booking
 │   ├── routes/             # auth, spots, bookings
@@ -45,75 +45,54 @@
     └── src/
         ├── app/
         │   ├── (auth)/         # login / register
-        │   ├── (public)/       # หน้าสาธารณะ
+        │   ├── (public)/       # public pages
         │   ├── admin/          # bookings, spots
         │   ├── my-booking/
         │   └── api/            # NextAuth
         └── components/         # admin, auth, home, my-booking, spots, ui
 ```
 
-รายละเอียดเพิ่มเติมของแต่ละส่วน: [Backend/README.md](Backend/README.md) · [Frontend/README.md](Frontend/README.md)
+For more details on each part, see [Backend/README.md](Backend/README.md) and [Frontend/README.md](Frontend/README.md).
 
-## Environment Variables
-
-### Backend (`Backend/config/config.env`)
-
-| ตัวแปร | คำอธิบาย |
-|---|---|
-| `NODE_ENV` | `development` หรือ `production` |
-| `PORT` | พอร์ตของ API (ค่าเริ่มต้น 5000) |
-| `MONGO_URI` | connection string ของ MongoDB |
-| `JWT_SECRET` | secret สำหรับเซ็น JWT |
-| `JWT_COOKIE_EXPIRE` | อายุ cookie (วัน) |
-| `FRONTEND_URL` | origin ของ Frontend สำหรับ CORS |
-
-### Frontend (`Frontend/.env.local`)
-
-| ตัวแปร | คำอธิบาย |
-|---|---|
-| `API_URL` | URL ของ Backend (ไม่ต้องมี `/api/v1` ต่อท้าย) |
-| `NEXTAUTH_URL` | URL ของ Frontend |
-| `NEXTAUTH_SECRET` | secret สำหรับ NextAuth |
 
 ## Scripts
 
 **Backend**
 
-| คำสั่ง | ทำอะไร |
+| Command | Description |
 |---|---|
-| `npm run dev` | รันด้วย nodemon |
-| `npm start` | รัน production |
-| `npm test` | ตรวจ syntax ของ `server.js` เท่านั้น (`node --check`) ยังไม่มีชุดทดสอบจริง |
+| `npm run dev` | Run with nodemon |
+| `npm start` | Run in production |
+| `npm test` | Only checks the syntax of `server.js` (`node --check`); there is no real test suite yet |
 
 **Frontend**
 
-| คำสั่ง | ทำอะไร |
+| Command | Description |
 |---|---|
-| `npm run dev` | รัน dev server |
-| `npm run build` | build production |
-| `npm start` | รัน production build |
-| `npm run lint` | ตรวจโค้ดด้วย ESLint |
-| `npm run typecheck` | ตรวจ type ด้วย TypeScript |
+| `npm run dev` | Start the dev server |
+| `npm run build` | Build for production |
+| `npm start` | Run the production build |
+| `npm run lint` | Lint with ESLint |
+| `npm run typecheck` | Type-check with TypeScript |
 
 ## API Overview
 
-| Method | Endpoint | สิทธิ์ | คำอธิบาย |
+| Method | Endpoint | Access | Description |
 |---|---|---|---|
-| POST | `/auth/register` | public | สมัครสมาชิก |
-| POST | `/auth/login` | public | เข้าสู่ระบบ |
-| GET | `/auth/me` | login | ข้อมูลผู้ใช้ปัจจุบัน |
-| GET | `/auth/logout` | login | ออกจากระบบ |
-| GET | `/spots` | public | รายการล็อก |
-| GET | `/spots/:id` | public | รายละเอียดล็อก |
-| POST | `/spots` | admin | เพิ่มล็อก |
-| PUT | `/spots/:id` | admin | แก้ไขล็อก |
-| DELETE | `/spots/:id` | admin | ลบล็อก (soft delete) |
-| GET | `/bookings/availability` | public | ตรวจสอบวันที่ว่าง |
-| GET | `/bookings` | login | ดูการจอง (member เห็นของตัวเอง, admin เห็นทั้งหมด) |
-| GET | `/bookings/:id` | login | รายละเอียดการจอง |
-| POST | `/bookings` | member | สร้างการจอง |
-| PUT | `/bookings/:id` | เจ้าของ / admin | แก้ไขการจอง |
-| DELETE | `/bookings/:id` | เจ้าของ / admin | ลบการจอง |
+| POST | `/auth/register` | public | Register a new user |
+| POST | `/auth/login` | public | Log in |
+| GET | `/auth/me` | login | Get the current user |
+| GET | `/auth/logout` | login | Log out |
+| GET | `/spots` | public | List spots |
+| GET | `/spots/:id` | public | Get spot details |
+| POST | `/spots` | admin | Create a spot |
+| PUT | `/spots/:id` | admin | Update a spot |
+| DELETE | `/spots/:id` | admin | Delete a spot (soft delete) |
+| GET | `/bookings/availability` | public | Check available dates |
+| GET | `/bookings` | login | List bookings (members see their own, admins see all) |
+| GET | `/bookings/:id` | login | Get booking details |
+| POST | `/bookings` | member | Create a booking |
+| PUT | `/bookings/:id` | owner / admin | Update a booking |
+| DELETE | `/bookings/:id` | owner / admin | Delete a booking |
 
-รายละเอียดครบทุก endpoint ดูได้ที่ Swagger UI (`/api-docs`)
-
+For full details on every endpoint, see Swagger UI at `/api-docs`.
