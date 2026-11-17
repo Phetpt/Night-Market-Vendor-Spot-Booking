@@ -1,6 +1,6 @@
 import type { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { login } from "@/lib/api/auth"
+import { login, logout } from "@/lib/api/auth"
 import { validateLogin } from "@/lib/validation/auth"
 import type { ApiError } from "@/types/api"
 
@@ -55,6 +55,7 @@ export const authOptions: NextAuthOptions = {
       }
       return token
     },
+    
     async session({ session, token }) {
       session.accessToken = token.accessToken
       session.user.id = token.id
@@ -62,4 +63,15 @@ export const authOptions: NextAuthOptions = {
       return session
     },
   },
+  events: {
+    // NextAuth เรียกให้เองทุกครั้งที่ผู้ใช้กด signOut()
+    async signOut({ token }) {
+      try {
+        if (token?.accessToken) await logout(token.accessToken as string)
+      } catch {
+        // backend ล่ม / token หมดอายุ ไม่เป็นไร ผู้ใช้ยังต้องออกจากระบบได้ตามปกติ
+      }
+    },
+  },
 }
+
