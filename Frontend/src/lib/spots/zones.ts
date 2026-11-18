@@ -49,12 +49,13 @@ export function deriveZones(spots: SpotLike[]): ZoneInfo[] {
 
 // เลขถัดไปของโซน = เลขสูงสุด + 1 
 export function getNextSpotNumber(spots: SpotLike[], code: string): NextSpotNumber {
-  let max = 0;
+  const used = new Set<number>()
   for (const spot of spots) {
     const match = /^([A-Z])(\d+)$/.exec(spot.spotNumber.trim().toUpperCase());
-    if (match && match[1] === code) max = Math.max(max, Number(match[2]));
+    if (match && match[1] === code) used.add(Number(match[2]))
   }
-  const next = max + 1;
+  let next = 1;
+  while (used.has(next)) next++
   if (next > MAX_SPOTS_PER_ZONE) return { ok: false, reason: "full" };
   return { ok: true, spotNumber: `${code}${String(next).padStart(2, "0")}` };
 }

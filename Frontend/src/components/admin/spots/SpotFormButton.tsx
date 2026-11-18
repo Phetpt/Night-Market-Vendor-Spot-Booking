@@ -248,8 +248,9 @@ export default function SpotFormButton({
                   {nextNumber?.ok ? nextNumber.spotNumber : "—"}
                 </div>
                 <p className="mt-1 text-xs text-[#4A5470]">
-                  Assigned automatically. The final number is confirmed when you save. A number
-                  from a deleted spot may be reused, so avoid deleting spots that have bookings.
+                  Assigned automatically using the lowest free number in the zone. The final number
+                  is confirmed when you save. Numbers from deleted spots are reused, so avoid
+                  deleting spots that have bookings.
                 </p>
               </div>
             </>
