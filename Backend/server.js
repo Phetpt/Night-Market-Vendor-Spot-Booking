@@ -228,19 +228,22 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
-  console.log(`Night Market Vendor Spot Booking API running on ${process.env.HOST || "http://localhost"}:${PORT}`);
-});
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 5000;
+  const server = app.listen(PORT, () => {
+    console.log(`Night Market Vendor Spot Booking API running on ${process.env.HOST || "http://localhost"}:${PORT}`);
+  });
 
-process.on("unhandledRejection", (error) => {
-  console.error(`Unhandled rejection: ${error.message}`);
-  server.close(() => process.exit(1));
-});
+  process.on("unhandledRejection", (error) => {
+    console.error(`Unhandled rejection: ${error.message}`);
+    server.close(() => process.exit(1));
+  });
 
-process.on("uncaughtException", (error) => {
-  console.error(`Uncaught exception: ${error.message}`);
-  process.exit(1);
-});
+  process.on("uncaughtException", (error) => {
+    console.error(`Uncaught exception: ${error.message}`);
+    process.exit(1);
+  });
+}
 
-module.exports = { app, server };
+module.exports = app;
+
